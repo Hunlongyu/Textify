@@ -18,12 +18,20 @@
     <ClCompile Include="src\main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\winBase\winBase.cpp">
+    <ClCompile Include="src\window\win.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\window\windowBase.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\config\config.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
+    <None Include="assets\data\index.html" />
+    <None Include="assets\data\config.json" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\logo.ico">
@@ -31,15 +39,21 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="resource.h">
+    <ClInclude Include="src\resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="src\winBase\winBase.h">
+    <ClInclude Include="src\window\win.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\window\windowBase.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\config\config.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="resource.rc">
+    <ResourceCompile Include="src\resource.rc">
       <Filter>资源文件</Filter>
     </ResourceCompile>
   </ItemGroup>

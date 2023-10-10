@@ -148,29 +148,34 @@ LRESULT WindowBase::winProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
   }
   case WM_HOTKEY: {
-    if (wParam == 1000) {
+    if (wParam == 1) {
       isHotKeyTriggered = true;
       show();
-      return 0;
+      //return 0;
     }
-    break;
+    //break;
+    return 0;
   }
-  case WM_LBUTTONDOWN:// 鼠标左键按下
-  case WM_MBUTTONDOWN:// 鼠标中键按下
-  case WM_RBUTTONDOWN:// 鼠标右键按下
-    if (isHotKeyTriggered) {
-      std::cout << "Shortcut (CTRL+SHIFT+Button) triggered, gaga function executed!" << std::endl;
-    }
-    //// 检查 Ctrl 和 Shift 是否都被抬起
-    //if ((GetKeyState(VK_SHIFT) & 0x8000) == 0 && (GetKeyState(VK_CONTROL) & 0x8000) == 0) {
-    //  isHotKeyTriggered = false;
-    //}
+  case WM_RBUTTONDOWN: {
+    show();
     return 0;
-  case WM_LBUTTONUP:// 鼠标左键抬起
-  case WM_MBUTTONUP:// 鼠标中键抬起
-  case WM_RBUTTONUP:// 鼠标右键抬起
-    isHotKeyTriggered = false;
-    return 0;
+  }
+  //case WM_LBUTTONDOWN:// 鼠标左键按下
+  //case WM_MBUTTONDOWN:// 鼠标中键按下
+  //case WM_RBUTTONDOWN:// 鼠标右键按下
+  //  if (isHotKeyTriggered) {
+  //    std::cout << "Shortcut (CTRL+SHIFT+Button) triggered, gaga function executed!" << std::endl;
+  //  }
+  //  //// 检查 Ctrl 和 Shift 是否都被抬起
+  //  //if ((GetKeyState(VK_SHIFT) & 0x8000) == 0 && (GetKeyState(VK_CONTROL) & 0x8000) == 0) {
+  //  //  isHotKeyTriggered = false;
+  //  //}
+  //  return 0;
+  //case WM_LBUTTONUP:// 鼠标左键抬起
+  //case WM_MBUTTONUP:// 鼠标中键抬起
+  //case WM_RBUTTONUP:// 鼠标右键抬起
+  //  isHotKeyTriggered = false;
+  //  return 0;
   }
 
   return DefWindowProcW(hwnd, msg, wParam, lParam);

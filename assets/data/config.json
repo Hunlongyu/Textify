@@ -1,0 +1,14 @@
+{
+	"checkForUpdate": false,
+	"autoCopy": false,
+	"autoStartup": false,
+	"admin": false,
+	"list": [
+		{
+			"name": "搜索",
+			"tips": "百度搜索",
+			"icon": "/data/icons/baidu.ico",
+			"command": "https://www.baidu.com/s?wd=%s"
+		}
+	]
+}

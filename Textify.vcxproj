@@ -127,17 +127,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\config\config.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\window\win.cpp" />
     <ClCompile Include="src\window\windowBase.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
+    <None Include="assets\data\config.json" />
+    <None Include="assets\data\index.html" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\logo.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\config\config.h" />
     <ClInclude Include="src\resource.h" />
     <ClInclude Include="src\window\win.h" />
     <ClInclude Include="src\window\windowBase.h" />
