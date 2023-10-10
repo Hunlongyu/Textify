@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "WindowBase.h"
+#include <string>
 
 class Win : public WindowBase
 {
@@ -12,5 +13,5 @@ public:
   static void dispose();
 
 private:
-  void initWinSize();
+  bool registerHotKey(const std::wstring &key);
 };

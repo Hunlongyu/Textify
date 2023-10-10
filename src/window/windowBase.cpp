@@ -1,12 +1,18 @@
 ﻿#include "windowBase.h"
 #include "../resource.h"
 
+#include <iostream>
+
 WindowBase::WindowBase() {}
 WindowBase::~WindowBase() {}
 
 // 窗口显示
-void WindowBase::show() const
+void WindowBase::show()
 {
+  getMousePos();
+  w = 200;
+  h = 80;
+  SetWindowPos(hwnd, nullptr, x, y, w, h, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
   ShowWindow(hwnd, SW_SHOW);
   UpdateWindow(hwnd);
 }
@@ -73,6 +79,15 @@ void WindowBase::initTray() const
   Shell_NotifyIcon(NIM_ADD, &nid);
 }
 
+// 获取鼠标位置
+void WindowBase::getMousePos()
+{
+  POINT cursorPos;
+  GetCursorPos(&cursorPos);
+  x = cursorPos.x;
+  y = cursorPos.y;
+}
+
 LRESULT WindowBase::routeWinMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   if (msg == WM_NCCREATE) {
@@ -93,7 +108,7 @@ LRESULT WindowBase::winProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     // TODO: 鼠标左键双击打开设置界面
     if (lParam == WM_LBUTTONDBLCLK) {
       show();
-      return false;
+      return 0;
     }
     if (lParam == WM_RBUTTONDOWN) {
       POINT cursorPos;
@@ -112,26 +127,50 @@ LRESULT WindowBase::winProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
   case WM_KEYDOWN: {
     if (wParam == VK_ESCAPE) {
       hide();
-      return false;
+      return 0;
     }
   }
   case WM_COMMAND: {
     if (HIWORD(wParam) == 0) {
       if (LOWORD(wParam) == ID_TRAY_SHOW) {
         show();
-        return false;
+        return 0;
       }
       // TODO: 显示设置窗口
       if (LOWORD(wParam) == ID_TRAY_SETTINGS) {
         show();
-        return false;
+        return 0;
       }
       if (LOWORD(wParam) == ID_TRAY_EXIT) {
         quit();
-        return false;
+        return 0;
       }
     }
   }
+  case WM_HOTKEY: {
+    if (wParam == 1000) {
+      isHotKeyTriggered = true;
+      show();
+      return 0;
+    }
+    break;
+  }
+  case WM_LBUTTONDOWN:// 鼠标左键按下
+  case WM_MBUTTONDOWN:// 鼠标中键按下
+  case WM_RBUTTONDOWN:// 鼠标右键按下
+    if (isHotKeyTriggered) {
+      std::cout << "Shortcut (CTRL+SHIFT+Button) triggered, gaga function executed!" << std::endl;
+    }
+    //// 检查 Ctrl 和 Shift 是否都被抬起
+    //if ((GetKeyState(VK_SHIFT) & 0x8000) == 0 && (GetKeyState(VK_CONTROL) & 0x8000) == 0) {
+    //  isHotKeyTriggered = false;
+    //}
+    return 0;
+  case WM_LBUTTONUP:// 鼠标左键抬起
+  case WM_MBUTTONUP:// 鼠标中键抬起
+  case WM_RBUTTONUP:// 鼠标右键抬起
+    isHotKeyTriggered = false;
+    return 0;
   }
 
   return DefWindowProcW(hwnd, msg, wParam, lParam);

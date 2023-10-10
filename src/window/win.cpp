@@ -1,28 +1,40 @@
 ﻿#include "win.h"
+#include <algorithm>
+#include <sstream>
 
 static Win *win;
 
 Win::Win()
 {
-  initWinSize();
   initWin();
   initTray();
+  registerHotKey(L"shift+ctrl");
 }
 
-Win::~Win() {}
+Win::~Win()
+{
+  UnregisterHotKey(hwnd, 1000);
+}
+
 void Win::init() { win = new Win(); }
 Win *Win::get() { return win; }
 void Win::dispose() { delete win; }
 
-// 初始化窗口大小
-void Win::initWinSize()
+// 注册 键盘 快捷键
+bool Win::registerHotKey(const std::wstring &keys)
 {
-  /*x = GetSystemMetrics(SM_XVIRTUALSCREEN);
-  y = GetSystemMetrics(SM_YVIRTUALSCREEN);
-  w = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-  h = GetSystemMetrics(SM_CYVIRTUALSCREEN);*/
-  x = 10;
-  y = 10;
-  w = 300;
-  h = 80;
+  std::wistringstream is(keys);
+  std::wstring key;
+  UINT hotKeyModifiers = 0;
+
+  while (std::getline(is, key, L'+')) {
+    std::transform(key.begin(), key.end(), key.begin(), [](wchar_t c) { return std::tolower(c); });
+
+    if (key == L"ctrl") { hotKeyModifiers |= MOD_CONTROL; }
+    if (key == L"alt") { hotKeyModifiers |= MOD_ALT; }
+    if (key == L"shift") { hotKeyModifiers |= MOD_SHIFT; }
+  }
+
+  return RegisterHotKey(nullptr, 1000, hotKeyModifiers, 0) != false;
 }
+
