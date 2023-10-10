@@ -3,6 +3,14 @@
 	"autoCopy": false,
 	"autoStartup": false,
 	"admin": false,
+	"hotkey": {
+		"shift": false,
+		"ctrl": false,
+		"alt": true,
+		"left": false,
+		"mid": false,
+		"right": true
+	},
 	"list": [
 		{
 			"name": "搜索",

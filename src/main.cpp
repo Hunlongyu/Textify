@@ -1,7 +1,10 @@
 ﻿#include "window/win.h"
+// #include "config/config.h"
 
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
+  // Config::getInstance().load_json_config();
+
   Win::init();
 
   MSG msg = {};
