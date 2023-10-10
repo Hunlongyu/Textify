@@ -1,10 +1,14 @@
-//{{NO_DEPENDENCIES}}
+О╩©//{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
 // Used by resource.rc
 
-#define IDI_ICON1 1
+#define IDI_ICON1           1
+#define WM_SYSICON          (WM_USER + 1)// Х┤╙Е╝ Д╧┴Ф╤┬Ф│╞
+#define ID_TRAY_EXIT        3000
+#define ID_TRAY_SHOW        3001
+#define ID_TRAY_SETTINGS    3002
 
-// пб╤тоС╣добр╩вИд╛хож╣
+// Ф√╟Е╞╧Х╠║Г └Д╦▀Д╦─Г╩└И╩≤Х╝╓Е─╪
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
