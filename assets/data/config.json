@@ -1,22 +1,22 @@
 {
-	"checkForUpdate": false,
-	"autoCopy": false,
-	"autoStartup": false,
-	"admin": false,
-	"hotkey": {
-		"shift": false,
-		"ctrl": false,
-		"alt": true,
-		"left": false,
-		"mid": false,
-		"right": true
-	},
-	"list": [
-		{
-			"name": "搜索",
-			"tips": "百度搜索",
-			"icon": "/data/icons/baidu.ico",
-			"command": "https://www.baidu.com/s?wd=%s"
-		}
-	]
+  "checkForUpdate": false,
+  "autoCopy": false,
+  "autoStartup": false,
+  "admin": false,
+  "hotkey": {
+    "shift": true,
+    "ctrl": true,
+    "alt": false,
+    "left": false,
+    "mid": false,
+    "right": true
+  },
+  "list": [
+    {
+      "name": "搜索",
+      "tips": "百度搜索",
+      "icon": "/data/icons/baidu.ico",
+      "command": "https://www.baidu.com/s?wd=%s"
+    }
+  ]
 }

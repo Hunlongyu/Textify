@@ -1,20 +1,18 @@
-#include "config.h"
+﻿#include "config.h"
 #include "../../third_party/json/single_include/nlohmann/json.hpp"
 #include "fstream"
-#include <winuser.h>
 
 using nlohmann::json;
+
+Config::Config() {}
+Config::~Config() {}
 
 bool Config::load_json_config()
 {
   const auto configPath = find_config_file();
-  if (configPath.empty()) {
-    MessageBox(NULL, TEXT("Unable to find config.json"), TEXT("Error"), MB_OK | MB_ICONERROR);
-    return false;
-  }
+  if (configPath.empty()) { return false; }
 
   std::ifstream jsonFile(configPath);
-
   json jsonObj;
   jsonFile >> jsonObj;
   jsonFile.close();
@@ -31,16 +29,13 @@ bool Config::load_json_config()
 
 bool Config::save_json_config() { return true; }
 
-// fs::path Config::find_config_file()
-//{
-//   // #ifdef _DEBUG
-//   //   fs::path root = "../../";
-//   // #else
-//   //   fs::path root = ".";
-//   // #endif
-//   /*fs::path root = "../../";
-//   for (auto &p : fs::recursive_directory_iterator(root)) {
-//     if (p.path().filename() == "config.json") { return p.path(); }
-//   }*/
-//   return {};
-// }
+fs::path Config::find_config_file()
+{
+  const fs::path root = ".";
+  try {
+    for (auto &p : fs::recursive_directory_iterator(root)) {
+      if (p.path().filename() == "config.json") { return p.path(); }
+    }
+  } catch (...) {}
+  return {};
+}

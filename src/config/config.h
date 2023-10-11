@@ -1,6 +1,6 @@
-#pragma once
-// #include <filesystem>
-// namespace fs = std::filesystem;
+﻿#pragma once
+#include <filesystem>
+namespace fs = std::filesystem;
 
 struct HotKey
 {
@@ -37,5 +37,5 @@ private:
 
   void operator=(Config const &) = delete;
 
-  // static fs::path find_config_file();
+  static fs::path find_config_file();
 };
