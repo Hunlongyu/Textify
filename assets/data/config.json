@@ -5,7 +5,7 @@
   "admin": false,
   "hotkey": {
     "shift": true,
-    "ctrl": true,
+    "ctrl": false,
     "alt": false,
     "left": false,
     "mid": false,

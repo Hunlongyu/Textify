@@ -10,7 +10,4 @@ public:
   static void init();
   static Win *get();
   static void dispose();
-
-private:
-  bool registerHotKey();
 };
