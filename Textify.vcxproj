@@ -135,6 +135,7 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\win\SingletonWindowClass.cpp" />
     <ClCompile Include="src\hook\MouseGlobalHook\MouseGlobalHook.cpp" />
     <ClCompile Include="src\config\config.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -150,6 +151,7 @@
     <Image Include="assets\logo.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\win\SingletonWindowClass.h" />
     <ClInclude Include="src\hook\MouseGlobalHook\MouseGlobalHook.h" />
     <ClInclude Include="src\config\config.h" />
     <ClInclude Include="src\resource.h" />

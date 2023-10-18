@@ -30,6 +30,9 @@
     <ClCompile Include="src\hook\MouseGlobalHook\MouseGlobalHook.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\win\SingletonWindowClass.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
@@ -55,6 +58,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\hook\MouseGlobalHook\MouseGlobalHook.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\win\SingletonWindowClass.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
