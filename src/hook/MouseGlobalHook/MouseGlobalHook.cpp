@@ -1,5 +1,7 @@
 #include "MouseGlobalHook.h"
 
+#include <VersionHelpers.h>
+
 MouseGlobalHook *volatile MouseGlobalHook::m_pThis;
 
 MouseGlobalHook::MouseGlobalHook(CWindow wndNotify,
@@ -166,8 +168,7 @@ bool MouseGlobalHook::IsCursorOnExcludedProgram(POINT pt) const
 
   DWORD dwDesiredAccess = PROCESS_QUERY_LIMITED_INFORMATION;
 
-  OSVERSIONINFO osvi = { sizeof(OSVERSIONINFO) };
-  if (GetVersionEx(&osvi) && osvi.dwMajorVersion <= 5) { dwDesiredAccess = PROCESS_QUERY_INFORMATION; }
+  if (IsWindows7OrGreater()) { dwDesiredAccess = PROCESS_QUERY_INFORMATION; }
 
   const CHandle process(::OpenProcess(dwDesiredAccess, FALSE, dwProcessId));
   if (!process) return false;

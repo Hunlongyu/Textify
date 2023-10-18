@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "../resource.h"
 #include <Windows.h>
 
 class WindowBase
@@ -10,6 +11,7 @@ public:
   void show();
   void hide() const;
   static void quit();
+  virtual LRESULT CALLBACK winProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
   HWND hwnd;
   int x, y, w, h;
@@ -22,5 +24,4 @@ protected:
 private:
   void getMousePos();
   static LRESULT CALLBACK routeWinMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-  LRESULT CALLBACK winProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 };

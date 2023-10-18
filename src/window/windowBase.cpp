@@ -1,6 +1,4 @@
 ﻿#include "windowBase.h"
-#include "../resource.h"
-
 #include <iostream>
 
 WindowBase::WindowBase() {}
@@ -21,10 +19,7 @@ void WindowBase::show()
 void WindowBase::hide() const { ShowWindow(hwnd, SW_HIDE); }
 
 // 软件退出
-void WindowBase::quit()
-{
-  PostQuitMessage(0);
-}
+void WindowBase::quit() { PostQuitMessage(0); }
 
 // 初始化一个窗口
 void WindowBase::initWin()
@@ -44,26 +39,9 @@ void WindowBase::initWin()
     return;
   }
   hwnd = CreateWindowEx(
-    WS_EX_TOOLWINDOW,
-    wcx.lpszClassName,
-    wcx.lpszClassName,
-    WS_POPUP,
-    x,
-    y,
-    w,
-    h,
-    nullptr,
-    nullptr,
-    h_instance,
-    this);
+    WS_EX_TOOLWINDOW, wcx.lpszClassName, wcx.lpszClassName, WS_POPUP, x, y, w, h, nullptr, nullptr, h_instance, this);
   SetWindowPos(
-    hwnd,
-    nullptr,
-    0,
-    0,
-    0,
-    0,
-    SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
+    hwnd, nullptr, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
 }
 
 // 初始化一个任务栏图标
@@ -96,14 +74,22 @@ LRESULT WindowBase::routeWinMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
     SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
   }
   const auto obj = reinterpret_cast<WindowBase *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
-  if (obj) { if (msg == WM_CLOSE) { delete obj; } else { return obj->winProc(hwnd, msg, wParam, lParam); } }
+  if (obj) {
+    if (msg == WM_CLOSE) {
+      delete obj;
+    } else {
+      return obj->winProc(hwnd, msg, wParam, lParam);
+    }
+  }
   return DefWindowProcW(hwnd, msg, wParam, lParam);
 }
 
 LRESULT WindowBase::winProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   switch (msg) {
-  case WM_NCHITTEST: { return HTCAPTION; }
+  case WM_NCHITTEST: {
+    return HTCAPTION;
+  }
   case WM_SYSICON: {
     // TODO: 鼠标左键双击打开设置界面
     if (lParam == WM_LBUTTONDBLCLK) {
@@ -124,58 +110,12 @@ LRESULT WindowBase::winProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       DestroyMenu(hMenu);
     }
   }
-  case WM_KEYDOWN: {
-    if (wParam == VK_ESCAPE) {
-      hide();
-      return 0;
-    }
-  }
-  case WM_COMMAND: {
-    if (HIWORD(wParam) == 0) {
-      if (LOWORD(wParam) == ID_TRAY_SHOW) {
-        show();
+    /*case WM_KEYDOWN: {
+      if (wParam == VK_ESCAPE) {
+        hide();
         return 0;
       }
-      // TODO: 显示设置窗口
-      if (LOWORD(wParam) == ID_TRAY_SETTINGS) {
-        show();
-        return 0;
-      }
-      if (LOWORD(wParam) == ID_TRAY_EXIT) {
-        quit();
-        return 0;
-      }
-    }
-  }
-  case WM_HOTKEY: {
-    if (wParam == 1) {
-      isHotKeyTriggered = true;
-      show();
-      //return 0;
-    }
-    //break;
-    return 0;
-  }
-  case WM_RBUTTONDOWN: {
-    show();
-    return 0;
-  }
-  //case WM_LBUTTONDOWN:// 鼠标左键按下
-  //case WM_MBUTTONDOWN:// 鼠标中键按下
-  //case WM_RBUTTONDOWN:// 鼠标右键按下
-  //  if (isHotKeyTriggered) {
-  //    std::cout << "Shortcut (CTRL+SHIFT+Button) triggered, gaga function executed!" << std::endl;
-  //  }
-  //  //// 检查 Ctrl 和 Shift 是否都被抬起
-  //  //if ((GetKeyState(VK_SHIFT) & 0x8000) == 0 && (GetKeyState(VK_CONTROL) & 0x8000) == 0) {
-  //  //  isHotKeyTriggered = false;
-  //  //}
-  //  return 0;
-  //case WM_LBUTTONUP:// 鼠标左键抬起
-  //case WM_MBUTTONUP:// 鼠标中键抬起
-  //case WM_RBUTTONUP:// 鼠标右键抬起
-  //  isHotKeyTriggered = false;
-  //  return 0;
+    }*/
   }
 
   return DefWindowProcW(hwnd, msg, wParam, lParam);

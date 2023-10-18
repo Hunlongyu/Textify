@@ -1,9 +1,12 @@
 ﻿#pragma once
+#include <atlstr.h>
 #include <filesystem>
+
 namespace fs = std::filesystem;
 
 struct HotKey
 {
+  bool enable;
   bool ctrl;
   bool alt;
   bool shift;
@@ -30,6 +33,7 @@ public:
   bool m_autoCopy;
   bool m_autoStartup;
   bool m_admin;
+  std::vector<CString> m_excludedPrograms;
 
 private:
   Config();

@@ -17,6 +17,7 @@ bool Config::load_json_config()
   jsonFile >> jsonObj;
   jsonFile.close();
 
+  m_HotKey.enable = jsonObj["hotkey"].value("enable", false);
   m_HotKey.shift = jsonObj["hotkey"].value("shift", false);
   m_HotKey.alt = jsonObj["hotkey"].value("alt", false);
   m_HotKey.ctrl = jsonObj["hotkey"].value("ctrl", true);
@@ -29,6 +30,7 @@ bool Config::load_json_config()
 
 bool Config::save_json_config() { return true; }
 
+// 递归查找 config.json 配置文件
 fs::path Config::find_config_file()
 {
   const fs::path root = ".";

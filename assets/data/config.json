@@ -4,6 +4,7 @@
   "autoStartup": false,
   "admin": false,
   "hotkey": {
+    "enable": true,
     "shift": true,
     "ctrl": false,
     "alt": false,
