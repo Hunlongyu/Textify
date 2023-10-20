@@ -1,5 +1,7 @@
 #include "Window.h"
 
+#include <iostream>
+
 Window::Window()
 {
   initWin();
@@ -18,13 +20,6 @@ LRESULT Window::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
   case WM_CLOSE: {
     PostQuitMessage(0);
     break;
-  }
-  case WM_KEYDOWN: {
-    if (wParam == VK_ESCAPE) {
-      const auto win = reinterpret_cast<Window *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
-      if (win) win->hide();
-      return 0;
-    }
   }
   case WM_SYSICON: {
     // TODO: 鼠标左键双击打开设置界面
@@ -116,9 +111,9 @@ void Window::initTray()
   Shell_NotifyIcon(NIM_ADD, &nid_);
 }
 
-void Window::initUI() const
+void Window::initUI()
 {
-  const HWND input_ = CreateWindowEx(0,
+  input_ = CreateWindowEx(0,
     L"EDIT",
     L"",
     WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN,
@@ -177,4 +172,11 @@ HMENU Window::createTrayMenu()
   InsertMenu(menu, -1, MF_SEPARATOR, 0, nullptr);
   InsertMenu(menu, -1, MF_BYPOSITION, ID_TRAY_EXIT, L"退出");
   return menu;
+}
+
+void Window::setText(const std::wstring &str)
+{
+  text = str;
+  SetWindowText(input_, str.c_str());
+  UpdateWindow(input_);
 }

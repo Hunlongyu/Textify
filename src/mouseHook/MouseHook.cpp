@@ -18,14 +18,20 @@ LRESULT CALLBACK MouseHook::mouseProc(int nCode, WPARAM wParam, LPARAM lParam)
       const auto flag = checkConfigMouse("mid");
       if (!flag) { break; }
       const MOUSEHOOKSTRUCT *mhs = reinterpret_cast<MOUSEHOOKSTRUCT *>(lParam);
-      if (win_) { win_->show(mhs->pt.x, mhs->pt.y, 200, 80); }
+      if (win_) {
+        win_->setText(L"¹§Ï²·¢²Æ");
+        win_->show(mhs->pt.x, mhs->pt.y, 200, 80);
+      }
       break;
     }
     case WM_RBUTTONDOWN: {
       const auto flag = checkConfigMouse("right");
       if (!flag) { break; }
       const MOUSEHOOKSTRUCT *mhs = reinterpret_cast<MOUSEHOOKSTRUCT *>(lParam);
-      if (win_) { win_->show(mhs->pt.x, mhs->pt.y, 200, 80); }
+      if (win_) {
+        win_->setText(L"½¡¿µ¿ìÀÖ");
+        win_->show(mhs->pt.x, mhs->pt.y, 200, 80);
+      }
       break;
     }
     }
