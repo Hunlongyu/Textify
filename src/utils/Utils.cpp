@@ -39,4 +39,44 @@ void utils::getTextFromPointByMSAA(POINT pt, std::wstring &outStr, CRect &outRc)
   }
 }
 
-void utils::getTextFromPointByUIA(POINT pt, std::wstring &outStr, CRect &outRc) {}
+void utils::getTextFromPointByUIA(POINT pt, std::wstring &outStr, CRect &outRc)
+{
+  outStr.clear();
+  outRc = CRect{ pt, CSize{ 0, 0 } };
+
+  HRESULT hr;
+  CComPtr<IUIAutomation> uia;
+  hr = uia.CoCreateInstance(CLSID_CUIAutomation);
+  if (FAILED(hr) || !uia) { return; }
+
+  CComPtr<IUIAutomationElement> element;
+  hr = uia->ElementFromPoint(pt, &element);
+  if (FAILED(hr) || !element) { return; }
+
+  CComPtr<IUIAutomationCondition> trueCondition;
+  hr = uia->CreateTrueCondition(&trueCondition);
+  if (FAILED(hr) || !trueCondition) { return; }
+
+  CComPtr<IUIAutomationTreeWalker> treeWalker;
+  hr = uia->CreateTreeWalker(trueCondition, &treeWalker);
+  if (FAILED(hr) || !treeWalker) { return; }
+
+  int processId = 0;
+  hr = element->get_CurrentProcessId(&processId);
+  if (FAILED(hr)) { return; }
+
+  BSTR bsName;
+  hr = element->get_CurrentName(&bsName);
+  if (SUCCEEDED(hr) && bsName != nullptr) { outStr += bsName; }
+  SysFreeString(bsName);
+
+  VARIANT value;
+  VariantInit(&value);
+  hr = element->GetCurrentPropertyValue(UIA_ValueValuePropertyId, &value);
+  if (hr == S_OK && value.vt == VT_BSTR && value.bstrVal != nullptr) { outStr += value.bstrVal; }
+  VariantClear(&value);
+
+  CRect b_rect;
+  hr = element->get_CurrentBoundingRectangle(&b_rect);
+  if (SUCCEEDED(hr)) { outRc = b_rect; }
+}

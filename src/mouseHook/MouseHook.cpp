@@ -13,7 +13,7 @@ LRESULT CALLBACK MouseHook::mouseProc(int nCode, WPARAM wParam, LPARAM lParam)
       if (!flag) { break; }
       const MOUSEHOOKSTRUCT *mhs = reinterpret_cast<MOUSEHOOKSTRUCT *>(lParam);
       if (win_) { win_->show(mhs->pt.x, mhs->pt.y, 200, 80); }
-      break;
+      return 1;
     }
     case WM_MBUTTONDOWN: {
       const auto flag = checkConfigMouse("mid");
@@ -23,7 +23,7 @@ LRESULT CALLBACK MouseHook::mouseProc(int nCode, WPARAM wParam, LPARAM lParam)
         win_->setText(L"恭喜发财");
         win_->show(mhs->pt.x, mhs->pt.y, 200, 80);
       }
-      break;
+      return 1;
     }
     case WM_RBUTTONDOWN: {
       if (isPress) { break; }
@@ -35,15 +35,20 @@ LRESULT CALLBACK MouseHook::mouseProc(int nCode, WPARAM wParam, LPARAM lParam)
       if (win_) {
         std::wstring txt;
         CRect rect;
-        utils::getTextFromPointByMSAA(mhs->pt, txt, rect);
-        win_->setText(txt);
-        win_->show(mhs->pt.x, mhs->pt.y, 200, 80);
+        POINT point;
+        if (GetCursorPos(&point)) {
+          // utils::getTextFromPointByMSAA(mhs->pt, txt, rect);
+          // utils::getTextFromPointByUIA(mhs->pt, txt, rect);
+          utils::getTextFromPointByUIA(point, txt, rect);
+          win_->setText(txt);
+          win_->show(point.x, point.y, 200, 80);
+        }
       }
-      break;
+      return 1;
     }
     case WM_RBUTTONUP: {
       isPress = false;
-      break;
+      return 1;
     }
     }
   }
