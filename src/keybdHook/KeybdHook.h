@@ -1,16 +1,16 @@
-#pragma once
+ï»¿#pragma once
 #include "../window/Window.h"
 #include <windows.h>
 
 namespace KeybdHook {
-// È«¾ÖÊó±ê¹³×Ó¾ä±ú
+// å…¨å±€é¼ æ ‡é’©å­å¥æŸ„
 extern HHOOK hKeybdHook;
 extern Window *win_;
 
-// Êó±ê´¦Àí³ÌĞòº¯Êı
+// é¼ æ ‡å¤„ç†ç¨‹åºå‡½æ•°
 LRESULT CALLBACK keybdProc(int nCode, WPARAM wParam, LPARAM lParam);
 
-// ³õÊ¼»¯ºÍĞ¶ÔØ¹³×ÓµÄ¹¦ÄÜ
+// åˆå§‹åŒ–å’Œå¸è½½é’©å­çš„åŠŸèƒ½
 void setGlobalKeybdHook(Window *win);
 void unhookGlobalKeybdHook();
 

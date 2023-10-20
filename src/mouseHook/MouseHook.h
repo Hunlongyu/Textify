@@ -1,24 +1,24 @@
-#pragma once
+ï»¿#pragma once
 #include "../config/Config.h"
 #include "../window/Window.h"
 #include <windows.h>
 
 namespace MouseHook {
-// È«¾ÖÊó±ê¹³×Ó¾ä±ú
+// å…¨å±€é¼ æ ‡é’©å­å¥æŸ„
 extern HHOOK hMouseHook;
 extern Window *win_;
 
-// Êó±ê´¦Àí³ÌĞòº¯Êı
+// é¼ æ ‡å¤„ç†ç¨‹åºå‡½æ•°
 LRESULT CALLBACK mouseProc(int nCode, WPARAM wParam, LPARAM lParam);
 
-// ³õÊ¼»¯ºÍĞ¶ÔØ¹³×ÓµÄ¹¦ÄÜ
+// åˆå§‹åŒ–å’Œå¸è½½é’©å­çš„åŠŸèƒ½
 void setGlobalMouseHook(Window *win);
 void unhookGlobalMouseHook();
 
-// ¼ì²éÅäÖÃÎÄ¼şÀï£¬ÓĞÃ»ÓĞ×¢²áÈ«¾ÖµÄÊó±ê¿ì½İ¼ü
+// æ£€æŸ¥é…ç½®æ–‡ä»¶é‡Œï¼Œæœ‰æ²¡æœ‰æ³¨å†Œå…¨å±€çš„é¼ æ ‡å¿«æ·é”®
 bool checkConfigMouse(std::string str);
 
-// ¼ì²éµ±Ç°¼üÅÌ¼¸¸öÌØÊâ¼üÊÇ·ñÊÇ°´ÏÂ×´Ì¬
+// æ£€æŸ¥å½“å‰é”®ç›˜å‡ ä¸ªç‰¹æ®Šé”®æ˜¯å¦æ˜¯æŒ‰ä¸‹çŠ¶æ€
 bool checkKeybdState();
 
 };// namespace MouseHook

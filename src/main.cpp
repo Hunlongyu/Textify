@@ -1,4 +1,4 @@
-#include "config/Config.h"
+﻿#include "config/Config.h"
 #include "keybdHook/KeybdHook.h"
 #include "mouseHook/MouseHook.h"
 #include "window/Window.h"

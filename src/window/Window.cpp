@@ -1,4 +1,4 @@
-#include "Window.h"
+ï»¿#include "Window.h"
 
 #include <iostream>
 
@@ -22,7 +22,7 @@ LRESULT Window::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     break;
   }
   case WM_SYSICON: {
-    // TODO: Êó±ê×ó¼üË«»÷´ò¿ªÉèÖÃ½çÃæ
+    // TODO: é¼ æ ‡å·¦é”®åŒå‡»æ‰“å¼€è®¾ç½®ç•Œé¢
     if (lParam == WM_LBUTTONDBLCLK) {
       const auto win = reinterpret_cast<Window *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
       win->show();
@@ -45,7 +45,7 @@ LRESULT Window::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         if (win) win->show();
         return 0;
       }
-      // TODO: ÏÔÊ¾ÉèÖÃ´°¿Ú
+      // TODO: æ˜¾ç¤ºè®¾ç½®çª—å£
       if (LOWORD(wParam) == ID_TRAY_SETTINGS) {
         const auto win = reinterpret_cast<Window *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
         if (win) win->show();
@@ -76,7 +76,7 @@ void Window::initWin()
   wc_.lpszClassName = L"Textify";
 
   if (!RegisterClass(&wc_)) {
-    MessageBox(nullptr, L"×¢²á´°¿ÚÀàÊ§°Ü", L"ÏµÍ³ÌáÊ¾", NULL);
+    MessageBox(nullptr, L"æ³¨å†Œçª—å£ç±»å¤±è´¥", L"ç³»ç»Ÿæç¤º", NULL);
     return;
   }
 
@@ -93,7 +93,7 @@ void Window::initWin()
     h_instance,
     this);
   if (hwnd_ == nullptr) {
-    MessageBox(nullptr, L"×¢²á´°¿ÚÀàÊ§°Ü", L"ÏµÍ³ÌáÊ¾", NULL);
+    MessageBox(nullptr, L"æ³¨å†Œçª—å£ç±»å¤±è´¥", L"ç³»ç»Ÿæç¤º", NULL);
     return;
   }
   SetWindowLongPtr(hwnd_, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
@@ -167,10 +167,10 @@ void Window::hide() const
 HMENU Window::createTrayMenu()
 {
   const HMENU menu = CreatePopupMenu();
-  InsertMenu(menu, -1, MF_BYPOSITION, ID_TRAY_SHOW, L"ÏÔÊ¾´°¿Ú");
-  InsertMenu(menu, -1, MF_BYPOSITION, ID_TRAY_SETTINGS, L"ÉèÖÃ");
+  InsertMenu(menu, -1, MF_BYPOSITION, ID_TRAY_SHOW, L"æ˜¾ç¤ºçª—å£");
+  InsertMenu(menu, -1, MF_BYPOSITION, ID_TRAY_SETTINGS, L"è®¾ç½®");
   InsertMenu(menu, -1, MF_SEPARATOR, 0, nullptr);
-  InsertMenu(menu, -1, MF_BYPOSITION, ID_TRAY_EXIT, L"ÍË³ö");
+  InsertMenu(menu, -1, MF_BYPOSITION, ID_TRAY_EXIT, L"é€€å‡º");
   return menu;
 }
 

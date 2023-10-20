@@ -1,4 +1,4 @@
-#include "Config.h"
+ï»¿#include "Config.h"
 #include "../../include/nlohmann/json.hpp"
 
 using nlohmann::json;
@@ -40,7 +40,7 @@ bool Config::load()
 
 bool Config::save() { return true; }
 
-// µİ¹é²éÕÒ config.json ÅäÖÃÎÄ¼ş
+// é€’å½’æŸ¥æ‰¾ config.json é…ç½®æ–‡ä»¶
 fs::path Config::find_config_filepath()
 {
   const fs::path root = ".";

@@ -1,4 +1,4 @@
-#include "KeybdHook.h"
+ï»¿#include "KeybdHook.h"
 
 HHOOK KeybdHook::hKeybdHook = nullptr;
 Window *KeybdHook::win_ = nullptr;
@@ -8,8 +8,8 @@ LRESULT CALLBACK KeybdHook::keybdProc(int nCode, WPARAM wParam, LPARAM lParam)
   if (nCode == HC_ACTION) {
     if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) {
       KBDLLHOOKSTRUCT *pKeybdHook = (KBDLLHOOKSTRUCT *)lParam;
-      if (pKeybdHook->vkCode == VK_ESCAPE && win_) {// ¼ì²âµ½ESC¼ü°´ÏÂ
-        win_->hide();// Òş²Ø´°¿Ú
+      if (pKeybdHook->vkCode == VK_ESCAPE && win_) {// æ£€æµ‹åˆ°ESCé”®æŒ‰ä¸‹
+        win_->hide();// éšè—çª—å£
       }
     }
   }

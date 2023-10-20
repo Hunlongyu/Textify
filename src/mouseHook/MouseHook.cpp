@@ -1,4 +1,4 @@
-#include "MouseHook.h"
+ï»¿#include "MouseHook.h"
 
 HHOOK MouseHook::hMouseHook = nullptr;
 Window *MouseHook::win_ = nullptr;
@@ -19,7 +19,7 @@ LRESULT CALLBACK MouseHook::mouseProc(int nCode, WPARAM wParam, LPARAM lParam)
       if (!flag) { break; }
       const MOUSEHOOKSTRUCT *mhs = reinterpret_cast<MOUSEHOOKSTRUCT *>(lParam);
       if (win_) {
-        win_->setText(L"¹§Ï²·¢²Æ");
+        win_->setText(L"æ­å–œå‘è´¢");
         win_->show(mhs->pt.x, mhs->pt.y, 200, 80);
       }
       break;
@@ -29,7 +29,7 @@ LRESULT CALLBACK MouseHook::mouseProc(int nCode, WPARAM wParam, LPARAM lParam)
       if (!flag) { break; }
       const MOUSEHOOKSTRUCT *mhs = reinterpret_cast<MOUSEHOOKSTRUCT *>(lParam);
       if (win_) {
-        win_->setText(L"½¡¿µ¿ìÀÖ");
+        win_->setText(L"å¥åº·å¿«ä¹");
         win_->show(mhs->pt.x, mhs->pt.y, 200, 80);
       }
       break;

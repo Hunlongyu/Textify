@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "../../resources/resource.h"
 
 #include <string>
@@ -12,29 +12,29 @@ public:
 
   HWND get() const { return hwnd_; }
 
-  // ³õÊ¼»¯´°¿Ú
+  // åˆå§‹åŒ–çª—å£
   void initWin();
 
-  // ³õÊ¼»¯ tray
+  // åˆå§‹åŒ– tray
   void initTray();
 
-  // ³õÊ¼»¯ UI
+  // åˆå§‹åŒ– UI
   void initUI();
 
-  // ÏÔÊ¾
+  // æ˜¾ç¤º
   void show() const;
   void show(int x, int y, int w, int h) const;
 
-  // Òş²Ø
+  // éšè—
   void hide() const;
 
-  // ´´½¨ÍĞÅÌÍ¼±ê²Ëµ¥
+  // åˆ›å»ºæ‰˜ç›˜å›¾æ ‡èœå•
   static HMENU createTrayMenu();
 
-  // ÉèÖÃÊäÈë¿òÎÄ×Ö
+  // è®¾ç½®è¾“å…¥æ¡†æ–‡å­—
   void setText(const std::wstring &str);
 
-  // ÊÂ¼ş¹ÜÀí
+  // äº‹ä»¶ç®¡ç†
   static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 private:
@@ -43,7 +43,7 @@ private:
   HWND input_;
   NOTIFYICONDATA nid_;
 
-  int w = 160, h = 80;// ´°¿Ú¿í¸ß
+  int w = 160, h = 80;// çª—å£å®½é«˜
 
-  std::wstring text;// Ê¶±ğµ½µÄÎÄ×Ö
+  std::wstring text;// è¯†åˆ«åˆ°çš„æ–‡å­—
 };
