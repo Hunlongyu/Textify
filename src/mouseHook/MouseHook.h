@@ -1,13 +1,13 @@
 ﻿#pragma once
 #include "../config/Config.h"
+#include "../utils/Utils.h"
 #include "../window/Window.h"
-#include <windows.h>
 
 namespace MouseHook {
 // 全局鼠标钩子句柄
 extern HHOOK hMouseHook;
 extern Window *win_;
-
+extern bool isPress;
 // 鼠标处理程序函数
 LRESULT CALLBACK mouseProc(int nCode, WPARAM wParam, LPARAM lParam);
 

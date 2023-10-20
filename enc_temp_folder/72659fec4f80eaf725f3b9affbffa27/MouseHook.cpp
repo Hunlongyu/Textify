@@ -31,7 +31,7 @@ LRESULT CALLBACK MouseHook::mouseProc(int nCode, WPARAM wParam, LPARAM lParam)
       const auto flag = checkConfigMouse("right");
       if (!flag) { break; }
       const MOUSEHOOKSTRUCT *mhs = reinterpret_cast<MOUSEHOOKSTRUCT *>(lParam);
-      // if (mhs->hwnd == win_->get()) { break; }
+      if (mhs->hwnd == win_->get()) { break; }
       if (win_) {
         std::wstring txt;
         CRect rect;

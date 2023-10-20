@@ -148,7 +148,7 @@ void Window::show() const
 {
   if (!hwnd_) { return; }
   ShowWindow(hwnd_, SW_SHOW);
-  UpdateWindow(hwnd_);
+  // UpdateWindow(hwnd_);
 }
 
 void Window::show(const int x, const int y, const int w, const int h) const
@@ -178,5 +178,5 @@ void Window::setText(const std::wstring &str)
 {
   text = str;
   SetWindowText(input_, str.c_str());
-  UpdateWindow(input_);
+  // UpdateWindow(input_);
 }
