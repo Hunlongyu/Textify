@@ -1,45 +1,39 @@
-﻿#pragma once
-#include <atlstr.h>
+#pragma once
 #include <filesystem>
+#include <fstream>
+#include <mutex>
 
 namespace fs = std::filesystem;
-
-struct HotKey
-{
-  bool enable;
-  bool ctrl;
-  bool alt;
-  bool shift;
-  bool left;
-  bool mid;
-  bool right;
-};
 
 class Config
 {
 public:
-  static Config &getInstance()
+  struct HotKey
   {
-    static Config instance;
-    return instance;
-  }
-
-  bool load_json_config();
-  static bool save_json_config();
+    bool enable;
+    bool ctrl;
+    bool alt;
+    bool shift;
+    bool left;
+    bool mid;
+    bool right;
+  };
 
   HotKey m_HotKey;
+  static Config &Instance();
 
-  bool m_checkForUpdate;
-  bool m_autoCopy;
-  bool m_autoStartup;
-  bool m_admin;
-  std::vector<CString> m_excludedPrograms;
+  bool load();
+  bool save();
 
 private:
+  static Config *instance_;
+  static std::mutex mutex_;
+
   Config();
   ~Config();
 
-  void operator=(Config const &) = delete;
+  Config(const Config &);
+  Config &operator=(const Config &);
 
-  static fs::path find_config_file();
+  fs::path find_config_filepath();
 };

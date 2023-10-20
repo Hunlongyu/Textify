@@ -1,15 +1,25 @@
-Ôªø#include "config.h"
-#include "../../third_party/json/single_include/nlohmann/json.hpp"
-#include "fstream"
+#include "Config.h"
+#include "../../include/nlohmann/json.hpp"
 
 using nlohmann::json;
+
+Config *Config::instance_ = nullptr;
+std::mutex Config::mutex_;
+
 
 Config::Config() {}
 Config::~Config() {}
 
-bool Config::load_json_config()
+Config &Config::Instance()
 {
-  const auto configPath = find_config_file();
+  std::lock_guard<std::mutex> lock(mutex_);
+  if (instance_ == nullptr) { instance_ = new Config(); }
+  return *instance_;
+}
+
+bool Config::load()
+{
+  const auto configPath = find_config_filepath();
   if (configPath.empty()) { return false; }
 
   std::ifstream jsonFile(configPath);
@@ -28,10 +38,10 @@ bool Config::load_json_config()
   return true;
 }
 
-bool Config::save_json_config() { return true; }
+bool Config::save() { return true; }
 
-// ÈÄíÂΩíÊü•Êâæ config.json ÈÖçÁΩÆÊñá‰ª∂
-fs::path Config::find_config_file()
+// µ›πÈ≤È’“ config.json ≈‰÷√Œƒº˛
+fs::path Config::find_config_filepath()
 {
   const fs::path root = ".";
   try {

@@ -18,55 +18,44 @@
     <ClCompile Include="src\main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\window\win.cpp">
+    <ClCompile Include="src\config\Config.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\window\windowBase.cpp">
+    <ClCompile Include="src\window\Window.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\config\config.cpp">
+    <ClCompile Include="src\mouseHook\MouseHook.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\hook\MouseGlobalHook\MouseGlobalHook.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\win\SingletonWindowClass.cpp">
+    <ClCompile Include="src\keybdHook\KeybdHook.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include=".clang-format" />
-    <None Include="assets\data\index.html" />
-    <None Include="assets\data\config.json" />
+    <ClInclude Include="resources\resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\config\Config.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\window\Window.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mouseHook\MouseHook.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\keybdHook\KeybdHook.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="resources\Resource.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\logo.ico">
       <Filter>资源文件</Filter>
     </Image>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="src\resource.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\window\win.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\window\windowBase.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\config\config.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\hook\MouseGlobalHook\MouseGlobalHook.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\win\SingletonWindowClass.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="src\resource.rc">
-      <Filter>资源文件</Filter>
-    </ResourceCompile>
   </ItemGroup>
 </Project>

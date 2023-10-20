@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{b74b0aa7-6e20-418b-8421-6c930d07cf47}</ProjectGuid>
-    <RootNamespace>Textify</RootNamespace>
+    <ProjectGuid>{40f7bf07-ef14-4c0d-80a5-1b05080a6bab}</ProjectGuid>
+    <RootNamespace>text</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -104,15 +104,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PreBuildEvent>
-      <Command>xcopy /y /e /s /i "$(ProjectDir)assets\data\*.*" "$(OutDir)\data"</Command>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -122,44 +120,35 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PreBuildEvent>
-      <Command>xcopy /y /e /s /i "$(ProjectDir)assets\data\*.*" "$(OutDir)\data"</Command>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\win\SingletonWindowClass.cpp" />
-    <ClCompile Include="src\hook\MouseGlobalHook\MouseGlobalHook.cpp" />
-    <ClCompile Include="src\config\config.cpp" />
+    <ClCompile Include="src\keybdHook\KeybdHook.cpp" />
+    <ClCompile Include="src\mouseHook\MouseHook.cpp" />
+    <ClCompile Include="src\config\Config.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\window\win.cpp" />
-    <ClCompile Include="src\window\windowBase.cpp" />
+    <ClCompile Include="src\window\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include=".clang-format" />
-    <None Include="assets\data\config.json" />
-    <None Include="assets\data\index.html" />
+    <ClInclude Include="src\keybdHook\KeybdHook.h" />
+    <ClInclude Include="src\mouseHook\MouseHook.h" />
+    <ClInclude Include="src\config\Config.h" />
+    <ClInclude Include="resources\resource.h" />
+    <ClInclude Include="src\window\Window.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="resources\Resource.rc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\logo.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="src\win\SingletonWindowClass.h" />
-    <ClInclude Include="src\hook\MouseGlobalHook\MouseGlobalHook.h" />
-    <ClInclude Include="src\config\config.h" />
-    <ClInclude Include="src\resource.h" />
-    <ClInclude Include="src\window\win.h" />
-    <ClInclude Include="src\window\windowBase.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="src\resource.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
