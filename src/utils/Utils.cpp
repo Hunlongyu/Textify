@@ -1,5 +1,7 @@
 ﻿#include "Utils.h"
 
+#include <regex>
+
 void utils::getTextFromPointByMSAA(POINT pt, std::wstring &outStr, CRect &outRc)
 {
   outStr.clear();
@@ -39,7 +41,7 @@ void utils::getTextFromPointByMSAA(POINT pt, std::wstring &outStr, CRect &outRc)
   }
 }
 
-void utils::getTextFromPointByUIA(POINT pt, std::wstring &outStr, CRect &outRc)
+void utils::getTextFromPointByUIA(POINT pt, std::wstring &outStr, CRect &outRc, std::vector<size_t> &outLengths)
 {
   outStr.clear();
   outRc = CRect{ pt, CSize{ 0, 0 } };
@@ -65,18 +67,58 @@ void utils::getTextFromPointByUIA(POINT pt, std::wstring &outStr, CRect &outRc)
   hr = element->get_CurrentProcessId(&processId);
   if (FAILED(hr)) { return; }
 
-  BSTR bsName;
-  hr = element->get_CurrentName(&bsName);
-  if (SUCCEEDED(hr) && bsName != nullptr) { outStr += bsName; }
-  SysFreeString(bsName);
+  while (true) {
+    std::wstring txt;
+    std::vector<size_t> lengths;
+    BSTR bsName;
+    hr = element->get_CurrentName(&bsName);
+    if (SUCCEEDED(hr) && bsName != nullptr) { processingText(txt, bsName, lengths); }
+    SysFreeString(bsName);
 
-  VARIANT value;
-  VariantInit(&value);
-  hr = element->GetCurrentPropertyValue(UIA_ValueValuePropertyId, &value);
-  if (hr == S_OK && value.vt == VT_BSTR && value.bstrVal != nullptr) { outStr += value.bstrVal; }
-  VariantClear(&value);
+    VARIANT value;
+    VariantInit(&value);
+    hr = element->GetCurrentPropertyValue(UIA_ValueValuePropertyId, &value);
+    if (hr == S_OK && value.vt == VT_BSTR && value.bstrVal != nullptr) { processingText(txt, value.bstrVal, lengths); }
+    VariantClear(&value);
+
+    if (!txt.empty()) {
+      outStr = txt;
+      outLengths = lengths;
+      break;
+    }
+    break;
+  }
+
 
   CRect b_rect;
   hr = element->get_CurrentBoundingRectangle(&b_rect);
   if (SUCCEEDED(hr)) { outRc = b_rect; }
+}
+
+void utils::processingText(std::wstring &txt, const std::wstring &str, std::vector<size_t> &lengthList)
+{
+  std::wstring append = str;
+  // Convert all newlines to CRLF and trim trailing newlines.
+  std::wstring::size_type n = 0;
+  while ((n = append.find(L"\r\n")) != std::wstring::npos) { append.replace(n, 2, L"\n"); }
+  while ((n = append.find(L"\r")) != std::wstring::npos) { append.replace(n, 1, L"\n"); }
+
+  // Trim trailing newlines.
+  auto pos = append.find_last_not_of(L"\n");
+  if (pos != std::wstring::npos) {
+    append.erase(pos + 1);
+  } else {
+    append.clear();// string is all newlines or empty
+  }
+
+  while ((n = append.find(L"\n")) != std::wstring::npos) { append.replace(n, 1, L"\r\n"); }
+
+  if (append.empty()) return;
+
+  if (!txt.empty()) {
+    txt += L"\r\n";
+    lengthList.push_back(txt.size());
+  }
+
+  txt += append;
 }

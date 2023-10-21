@@ -8,43 +8,23 @@ LRESULT CALLBACK MouseHook::mouseProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
   if (nCode >= 0) {
     switch (wParam) {
-    case WM_LBUTTONDOWN: {
-      const auto flag = checkConfigMouse("left");
-      if (!flag) { break; }
-      const MOUSEHOOKSTRUCT *mhs = reinterpret_cast<MOUSEHOOKSTRUCT *>(lParam);
-      if (win_) { win_->show(mhs->pt.x, mhs->pt.y, 200, 80); }
-      return 1;
-    }
     case WM_MBUTTONDOWN: {
       const auto flag = checkConfigMouse("mid");
-      if (!flag) { break; }
-      const MOUSEHOOKSTRUCT *mhs = reinterpret_cast<MOUSEHOOKSTRUCT *>(lParam);
-      if (win_) {
-        win_->setText(L"恭喜发财");
-        win_->show(mhs->pt.x, mhs->pt.y, 200, 80);
-      }
+      if (!flag) return 0;
+      if (isPress) { break; }
+      isPress = true;
+      return getTextFromPoint();
+    }
+    case WM_MBUTTONUP: {
+      isPress = false;
       return 1;
     }
     case WM_RBUTTONDOWN: {
+      const auto flag = checkConfigMouse("right");
+      if (!flag) return 0;
       if (isPress) { break; }
       isPress = true;
-      const auto flag = checkConfigMouse("right");
-      if (!flag) { break; }
-      const MOUSEHOOKSTRUCT *mhs = reinterpret_cast<MOUSEHOOKSTRUCT *>(lParam);
-      // if (mhs->hwnd == win_->get()) { break; }
-      if (win_) {
-        std::wstring txt;
-        CRect rect;
-        POINT point;
-        if (GetCursorPos(&point)) {
-          // utils::getTextFromPointByMSAA(mhs->pt, txt, rect);
-          // utils::getTextFromPointByUIA(mhs->pt, txt, rect);
-          utils::getTextFromPointByUIA(point, txt, rect);
-          win_->setText(txt);
-          win_->show(point.x, point.y, 200, 80);
-        }
-      }
-      return 1;
+      return getTextFromPoint();
     }
     case WM_RBUTTONUP: {
       isPress = false;
@@ -63,13 +43,13 @@ void MouseHook::setGlobalMouseHook(Window *win)
 
 void MouseHook::unhookGlobalMouseHook() { UnhookWindowsHookEx(hMouseHook); }
 
-bool MouseHook::checkConfigMouse(std::string pos)
+bool MouseHook::checkConfigMouse(const std::string &str)
 {
   const auto hotkey = Config::Instance().m_HotKey;
   if (!hotkey.enable) { return false; }
-  if (hotkey.left && pos == "left") { return checkKeybdState(); }
-  if (hotkey.mid && pos == "mid") { return checkKeybdState(); }
-  if (hotkey.right && pos == "right") { return checkKeybdState(); }
+  if (hotkey.left && str == "left") { return checkKeybdState(); }
+  if (hotkey.mid && str == "mid") { return checkKeybdState(); }
+  if (hotkey.right && str == "right") { return checkKeybdState(); }
   return false;
 }
 
@@ -83,4 +63,22 @@ bool MouseHook::checkKeybdState()
   const auto hotkey = Config::Instance().m_HotKey;
   const bool flag = isOK(hotkey.shift, VK_SHIFT) || isOK(hotkey.ctrl, VK_CONTROL) || isOK(hotkey.alt, VK_MENU);
   return flag;
+}
+
+int MouseHook::getTextFromPoint()
+{
+  POINT point;
+  if (win_ && GetCursorPos(&point)) {
+    std::wstring txt;
+    CRect rect;
+    std::vector<size_t> lengths;
+    // utils::getTextFromPointByMSAA(point, txt, rect);
+    //  utils::getTextFromPointByUIA(mhs->pt, txt, rect);
+    utils::getTextFromPointByUIA(point, txt, rect, lengths);
+    // win_->setText(txt);
+    //  win_->show(point.x, point.y, rect.Width(), rect.Height());
+    win_->show(point, lengths, txt);
+    return 1;
+  }
+  return 1;
 }

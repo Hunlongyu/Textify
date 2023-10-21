@@ -31,7 +31,7 @@ bool Config::load()
   m_HotKey.shift = jsonObj["hotkey"].value("shift", false);
   m_HotKey.alt = jsonObj["hotkey"].value("alt", false);
   m_HotKey.ctrl = jsonObj["hotkey"].value("ctrl", true);
-  m_HotKey.left = jsonObj["hotkey"].value("left", false);
+  m_HotKey.left = false;
   m_HotKey.mid = jsonObj["hotkey"].value("mid", false);
   m_HotKey.right = jsonObj["hotkey"].value("right", true);
 

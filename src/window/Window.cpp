@@ -126,7 +126,7 @@ void Window::initUI()
     nullptr,
     nullptr);
   if (input_) {
-    HFONT hFont = CreateFont(-MulDiv(12, GetDeviceCaps(GetDC(input_), LOGPIXELSY), 72),
+    HFONT hFont = CreateFont(-MulDiv(10, GetDeviceCaps(GetDC(input_), LOGPIXELSY), 72),
       0,
       0,
       0,
@@ -148,15 +148,37 @@ void Window::show() const
 {
   if (!hwnd_) { return; }
   ShowWindow(hwnd_, SW_SHOW);
-  // UpdateWindow(hwnd_);
 }
 
 void Window::show(const int x, const int y, const int w, const int h) const
 {
-  SetWindowPos(hwnd_, nullptr, x, y, w, h, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+  const int width = w + 40;
+  const int height = h + 40;
+  // SetWindowPos(input_, hwnd_, 10, 10, w, h, true);
+  MoveWindow(input_,// handle to window
+    10,// new x position
+    10,// new y position
+    w,// new width
+    h,// new height
+    TRUE// should the window be repainted
+  );
+  SetWindowPos(hwnd_, nullptr, x, y, width, height, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
   ShowWindow(hwnd_, SW_SHOW);
   UpdateWindow(hwnd_);
 }
+
+void Window::show(const POINT &point, const std::vector<size_t> &lengths, const std::wstring &txt)
+{
+  text = txt;
+  text += L" point: ";
+  text += std::to_wstring(point.x);
+  text += L" , ";
+  text += std::to_wstring(point.y);
+  SetWindowText(input_, text.c_str());
+  SetWindowPos(hwnd_, nullptr, point.x, point.y, w + 200, h, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+  ShowWindow(hwnd_, SW_SHOW);
+}
+
 
 void Window::hide() const
 {

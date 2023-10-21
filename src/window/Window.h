@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "../../resources/resource.h"
 #include <string>
+#include <vector>
 #include <windows.h>
 
 class Window
@@ -23,6 +24,7 @@ public:
   // 显示
   void show() const;
   void show(int x, int y, int w, int h) const;
+  void show(const POINT &point, const std::vector<size_t> &lengths, const std::wstring &txt);
 
   // 隐藏
   void hide() const;

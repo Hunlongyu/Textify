@@ -16,9 +16,11 @@ void setGlobalMouseHook(Window *win);
 void unhookGlobalMouseHook();
 
 // 检查配置文件里，有没有注册全局的鼠标快捷键
-bool checkConfigMouse(std::string str);
+bool checkConfigMouse(const std::string &str);
 
 // 检查当前键盘几个特殊键是否是按下状态
 bool checkKeybdState();
+
+int getTextFromPoint();
 
 };// namespace MouseHook

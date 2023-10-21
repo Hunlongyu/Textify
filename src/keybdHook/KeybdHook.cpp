@@ -11,6 +11,10 @@ LRESULT CALLBACK KeybdHook::keybdProc(int nCode, WPARAM wParam, LPARAM lParam)
       if (pKeybdHook->vkCode == VK_ESCAPE && win_) {// 检测到ESC键按下
         win_->hide();// 隐藏窗口
       }
+      if (pKeybdHook->vkCode == VK_F2 && win_) {
+        PostQuitMessage(0);
+        return 1;
+      }
     }
   }
   return CallNextHookEx(hKeybdHook, nCode, wParam, lParam);
