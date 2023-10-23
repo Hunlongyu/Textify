@@ -23,7 +23,6 @@ public:
 
   // 显示
   void show() const;
-  void show(int x, int y, int w, int h) const;
   void show(const POINT &point, const std::vector<size_t> &lengths, const std::wstring &txt);
 
   // 隐藏
@@ -31,9 +30,6 @@ public:
 
   // 创建托盘图标菜单
   static HMENU createTrayMenu();
-
-  // 设置输入框文字
-  void setText(const std::wstring &str);
 
   // 事件管理
   static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -47,4 +43,6 @@ private:
   int w = 160, h = 80;// 窗口宽高
 
   std::wstring text;// 识别到的文字
+
+  static size_t unicode_character_count(const std::wstring &str);
 };

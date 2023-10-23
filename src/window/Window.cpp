@@ -117,8 +117,8 @@ void Window::initUI()
     L"EDIT",
     L"",
     WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN,
-    10,
-    10,
+    4,
+    4,
     w - 20,
     (h - 20) - 20 - 4,
     hwnd_,
@@ -150,32 +150,19 @@ void Window::show() const
   ShowWindow(hwnd_, SW_SHOW);
 }
 
-void Window::show(const int x, const int y, const int w, const int h) const
-{
-  const int width = w + 40;
-  const int height = h + 40;
-  // SetWindowPos(input_, hwnd_, 10, 10, w, h, true);
-  MoveWindow(input_,// handle to window
-    10,// new x position
-    10,// new y position
-    w,// new width
-    h,// new height
-    TRUE// should the window be repainted
-  );
-  SetWindowPos(hwnd_, nullptr, x, y, width, height, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
-  ShowWindow(hwnd_, SW_SHOW);
-  UpdateWindow(hwnd_);
-}
-
 void Window::show(const POINT &point, const std::vector<size_t> &lengths, const std::wstring &txt)
 {
   text = txt;
-  text += L" point: ";
-  text += std::to_wstring(point.x);
-  text += L" , ";
-  text += std::to_wstring(point.y);
+  const auto count = unicode_character_count(text);
+  if (count * 10 < 100) {
+    w = 100;
+  } else {
+    w = static_cast<int>(count * 10);
+  }
+  h = static_cast<int>(lengths.size() + 1) * 20;
   SetWindowText(input_, text.c_str());
-  SetWindowPos(hwnd_, nullptr, point.x, point.y, w + 200, h, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+  SetWindowPos(input_, nullptr, 0, 0, w, h, SWP_NOZORDER | SWP_NOMOVE);
+  SetWindowPos(hwnd_, nullptr, point.x, point.y, w + 8, h + 28, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
   ShowWindow(hwnd_, SW_SHOW);
 }
 
@@ -196,9 +183,18 @@ HMENU Window::createTrayMenu()
   return menu;
 }
 
-void Window::setText(const std::wstring &str)
+size_t Window::unicode_character_count(const std::wstring &str)
 {
-  text = str;
-  SetWindowText(input_, str.c_str());
-  // UpdateWindow(input_);
+  size_t count = 0;
+  for (size_t i = 0; i < str.size(); ++i) {
+    wchar_t ch = str[i];
+    if (ch >= 0xD800 && ch <= 0xDBFF)// is high surrogate?
+    {
+      ++count;
+    } else if (!(ch >= 0xDC00 && ch <= 0xDFFF))// if it's not a low surrogate
+    {
+      ++count;
+    }
+  }
+  return count;
 }

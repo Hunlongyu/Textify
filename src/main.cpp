@@ -6,11 +6,12 @@
 
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-  Config::Instance().load();
+  auto &config_ = Config::Instance();
+  config_.load();
 
   Window win;
 
-  MouseHook::setGlobalMouseHook(&win);
+  MouseHook::setGlobalMouseHook(&win, &config_);
   KeybdHook::setGlobalKeybdHook(&win);
 
   MSG msg = {};

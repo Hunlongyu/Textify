@@ -7,12 +7,13 @@ namespace MouseHook {
 // 全局鼠标钩子句柄
 extern HHOOK hMouseHook;
 extern Window *win_;
+extern Config *config_;
 extern bool isPress;
 // 鼠标处理程序函数
 LRESULT CALLBACK mouseProc(int nCode, WPARAM wParam, LPARAM lParam);
 
 // 初始化和卸载钩子的功能
-void setGlobalMouseHook(Window *win);
+void setGlobalMouseHook(Window *win, Config *config);
 void unhookGlobalMouseHook();
 
 // 检查配置文件里，有没有注册全局的鼠标快捷键
