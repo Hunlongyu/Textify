@@ -43,6 +43,7 @@ private:
   WNDCLASS wc_;
   HWND input_;
   NOTIFYICONDATA nid_;
+  std::vector<HWND> btns_;
 
   int w = 108, h = 60;// 窗口宽高
   bool hasBtn{ false };
@@ -54,8 +55,24 @@ private:
   static size_t unicode_character_count(const std::wstring &str);
 
   // 解析按钮事件
-  void parseBtnHandle(int);
+  void parseBtnHandle(int) const;
 
   // 复制输入框内容到剪贴板
-  void copyContentToClipboard() const;
+  void copyContentToClipboard(const Config::Btn &btn) const;
+
+  // 字符串转 URL 编码
+  static std::string urlEncode(const std::string &txt);
+
+  // std::wstring转std::string
+  static std::string WStringToString(const std::wstring &wstr);
+
+
+  // std::string转std::wstring
+  static std::wstring StringToWString(const std::string &str);
+
+  // 打开浏览器翻译输入框内容
+  void openBrowserTranslate(const Config::Btn &btn) const;
+
+  // 打开浏览器搜索输入框内容
+  void openBrowserSearch(const Config::Btn &btn) const;
 };

@@ -25,9 +25,8 @@ public:
     std::wstring tips;
     std::wstring icon;
     std::wstring command;
-    bool app{ false };
+    bool hide{ false };
   };
-
 
   HotKey m_HotKey;
   std::vector<Btn> btn_lists;

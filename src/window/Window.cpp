@@ -6,7 +6,7 @@ Window::Window()
 {
   const auto &config_ = Config::Instance();
   const auto lists = config_.btn_lists;
-  btnCount = lists.size();
+  btnCount = static_cast<int>(lists.size());
   initWin();
   initTray();
   initInput();
@@ -167,6 +167,7 @@ void Window::initButtons()
   hasBtn = true;
 
   const auto h_instance = GetModuleHandle(nullptr);
+  btns_.clear();
   for (auto i = 0; i < lists.size(); ++i) {
     const auto btn = lists.at(i);
     const HWND btnItem = CreateWindow(L"Button",
@@ -177,12 +178,13 @@ void Window::initButtons()
       22,
       22,
       hwnd_,
-      reinterpret_cast<HMENU>(i),
+      reinterpret_cast<HMENU>(static_cast<intptr_t>(i)),
       h_instance,
       nullptr);
 
     HICON btnIcon = static_cast<HICON>(LoadImage(nullptr, btn.icon.c_str(), IMAGE_ICON, 16, 16, LR_LOADFROMFILE));
     SendMessage(btnItem, BM_SETIMAGE, IMAGE_ICON, reinterpret_cast<LPARAM>(btnIcon));
+    btns_.push_back(btnItem);
   }
 
   SetWindowPos(hwnd_, nullptr, 0, 0, w, h, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
@@ -198,15 +200,17 @@ void Window::show(const POINT &point, const std::vector<size_t> &lengths, const 
 {
   text = txt;
   const auto count = unicode_character_count(text);
-  double iw;
-  if (count * 10 < 100) {
+  const int iCount = static_cast<int>(count);
+  int iw;
+  if (iCount * 10 < 100) {
     iw = 100;
   } else {
-    iw = static_cast<int>(count * 10);
+    iw = iCount * 10;
   }
   w = btnCount > 4 ? btnCount * 22 + 16 + ((btnCount - 1) * 4) : 100;
   w = iw > w ? iw : w;
-  const double ih = static_cast<int>(lengths.size() + 1) * 20;
+
+  const int ih = static_cast<int>(lengths.size() + 1) * 20;
   h = btnCount > 0 ? ih + 22 + 20 : ih + 14;
 
   const int screenWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
@@ -218,6 +222,11 @@ void Window::show(const POINT &point, const std::vector<size_t> &lengths, const 
 
   SetWindowText(input_, text.c_str());
   SetWindowPos(input_, nullptr, 0, 0, w - 16, ih, SWP_NOZORDER | SWP_NOMOVE);
+  for (auto i = 0; i < btns_.size(); ++i) {
+    const auto x = 8 + (i * 22) + ((i - 1) * 4);
+    const auto y = ih + 12;
+    SetWindowPos(btns_[i], nullptr, x, y, 22, 22, SWP_NOSIZE | SWP_NOZORDER);
+  }
   SetWindowPos(hwnd_, nullptr, px, py, w, h, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
   ShowWindow(hwnd_, SW_SHOW);
 }
@@ -255,17 +264,18 @@ size_t Window::unicode_character_count(const std::wstring &str)
   return count;
 }
 
-void Window::parseBtnHandle(int id)
+void Window::parseBtnHandle(int id) const
 {
   const auto &config_ = Config::Instance();
   const auto lists = config_.btn_lists;
   const auto btn = lists[id];
-  if (btn.type == L"copy") { copyContentToClipboard(); }
+  if (btn.type == L"copy") { copyContentToClipboard(btn); }
+  if (btn.type == L"translate") { openBrowserTranslate(btn); }
+  if (btn.type == L"search") { openBrowserSearch(btn); }
 }
 
-void Window::copyContentToClipboard() const
+void Window::copyContentToClipboard(const Config::Btn &btn) const
 {
-  std::cout << "copy" << std::endl;
   const int length = GetWindowTextLength(input_) + 1;
   wchar_t *buffer = new wchar_t[length];
   GetWindowText(input_, buffer, length);
@@ -284,5 +294,93 @@ void Window::copyContentToClipboard() const
     CloseClipboard();
   }
   delete[] buffer;
-  hide();
+  if (btn.hide) { hide(); }
+}
+
+std::string Window::urlEncode(const std::string &txt)
+{
+  constexpr char lookup[] = "0123456789abcdef";
+  std::stringstream e;
+  for (int i = 0, ix = static_cast<int>(txt.length()); i < ix; i++) {
+    const char &c = txt[i];
+    if ((48 <= c && c <= 57) ||// 0-9
+        (65 <= c && c <= 90) ||// abc...xyz
+        (97 <= c && c <= 122) ||// ABC...XYZ
+        (c == '-' || c == '_' || c == '.' || c == '~')) {
+      e << c;
+    } else {
+      e << '%';
+      e << lookup[(c & 0xF0) >> 4];
+      e << lookup[(c & 0x0F)];
+    }
+  }
+  return e.str();
+}
+
+std::string Window::WStringToString(const std::wstring &wstr)
+{
+  int num = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, NULL, 0, NULL, NULL);
+  char *wide = new char[num];
+  WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, wide, num, NULL, NULL);
+  std::string str(wide);
+  delete[] wide;
+  return str;
+}
+
+std::wstring Window::StringToWString(const std::string &str)
+{
+  int num = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, NULL, 0);
+  wchar_t *wide = new wchar_t[num];
+  MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, wide, num);
+  std::wstring wstr(wide);
+  delete[] wide;
+  return wstr;
+}
+
+void Window::openBrowserTranslate(const Config::Btn &btn) const
+{
+  const int length = GetWindowTextLength(input_) + 1;
+  if (length == 1) { return; }
+
+  const auto buffer = std::make_unique<wchar_t[]>(length);
+  GetWindowText(input_, buffer.get(), length);
+
+  const std::wstring wstr(buffer.get());
+  auto str = WStringToString(wstr);
+  str = urlEncode(str);
+
+  const auto txt = StringToWString(str);
+  const auto cmd = btn.command;
+  const size_t size = cmd.length() + txt.length() * 2;
+  wchar_t *cmdBuffer = new wchar_t[size];
+  swprintf(cmdBuffer, size, cmd.c_str(), txt.c_str());
+  const std::wstring replacedUrl(cmdBuffer);
+  delete[] cmdBuffer;
+
+  ShellExecuteW(nullptr, L"open", replacedUrl.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+  if (btn.hide) { hide(); }
+}
+
+void Window::openBrowserSearch(const Config::Btn &btn) const
+{
+  const int length = GetWindowTextLength(input_) + 1;
+  if (length == 1) { return; }
+
+  const auto buffer = std::make_unique<wchar_t[]>(length);
+  GetWindowText(input_, buffer.get(), length);
+
+  const std::wstring wstr(buffer.get());
+  auto str = WStringToString(wstr);
+  str = urlEncode(str);
+
+  const auto txt = StringToWString(str);
+  const auto cmd = btn.command;
+  const size_t size = cmd.length() + txt.length() * 2;
+  wchar_t *cmdBuffer = new wchar_t[size];
+  swprintf(cmdBuffer, size, cmd.c_str(), txt.c_str());
+  const std::wstring replacedUrl(cmdBuffer);
+  delete[] cmdBuffer;
+
+  ShellExecuteW(nullptr, L"open", replacedUrl.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+  if (btn.hide) { hide(); }
 }

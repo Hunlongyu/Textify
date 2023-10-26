@@ -52,7 +52,7 @@ bool Config::load()
       const auto command = item.at("command").get<std::string>();
       btn.command = std::wstring(command.begin(), command.end());
     }
-    if (item.contains("app")) { btn.app = item.at("app").get<bool>(); }
+    if (item.contains("hide")) { btn.hide = item.at("hide").get<bool>(); }
     btn_lists.push_back(btn);
   }
 
