@@ -1,4 +1,4 @@
-{
+﻿{
   "checkForUpdate": false,
   "autoCopy": false,
   "autoStartup": false,
@@ -14,10 +14,37 @@
   },
   "list": [
     {
-      "name": "搜索",
+      "type": "copy",
+      "tips": "复制到剪贴板",
+      "icon": "assets/data/icons/copy.ico"
+    },
+    {
+      "type": "search",
       "tips": "百度搜索",
-      "icon": "/data/icons/baidu.ico",
-      "command": "https://www.baidu.com/s?wd=%s"
+      "icon": "assets/data/icons/baidu.ico",
+      "command": "https://www.baidu.com/s?wd=%s",
+      "app": false
+    },
+    {
+      "type": "search",
+      "tips": "谷歌搜索",
+      "icon": "assets/data/icons/google.ico",
+      "command": "https://www.google.com/search?q=%s",
+      "app": false
+    },
+    {
+      "type": "translate",
+      "tips": "谷歌翻译",
+      "icon": "assets/data/icons/gt.ico",
+      "command": "https://translate.google.com/?sl=auto&tl=zh-CN&text=%s&op=translate",
+      "app": false
+    },
+    {
+      "type": "translate",
+      "tips": "百度翻译",
+      "icon": "assets/data/icons/google_translate.ico",
+      "command": "https://fanyi.baidu.com/#auto/auto/%s",
+      "app": true
     }
   ]
 }

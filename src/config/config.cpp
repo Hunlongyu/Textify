@@ -1,6 +1,9 @@
 ﻿#include "Config.h"
 #include "../../include/nlohmann/json.hpp"
 
+#include <codecvt>
+#include <iostream>
+
 using nlohmann::json;
 
 Config *Config::instance_ = nullptr;
@@ -34,6 +37,24 @@ bool Config::load()
   m_HotKey.left = false;
   m_HotKey.mid = jsonObj["hotkey"].value("mid", false);
   m_HotKey.right = jsonObj["hotkey"].value("right", true);
+
+  btn_lists.clear();
+  const auto lists = jsonObj["list"];
+  for (auto item : lists) {
+    Btn btn;
+    const auto type = item.at("type").get<std::string>();
+    btn.type = std::wstring(type.begin(), type.end());
+    const auto tips = item.at("tips").get<std::string>();
+    btn.tips = std::wstring(tips.begin(), tips.end());
+    const auto icon = item.at("icon").get<std::string>();
+    btn.icon = std::wstring(icon.begin(), icon.end());
+    if (item.contains("command")) {
+      const auto command = item.at("command").get<std::string>();
+      btn.command = std::wstring(command.begin(), command.end());
+    }
+    if (item.contains("app")) { btn.app = item.at("app").get<bool>(); }
+    btn_lists.push_back(btn);
+  }
 
   return true;
 }

@@ -19,7 +19,18 @@ public:
     bool right;
   };
 
+  struct Btn
+  {
+    std::wstring type;
+    std::wstring tips;
+    std::wstring icon;
+    std::wstring command;
+    bool app{ false };
+  };
+
+
   HotKey m_HotKey;
+  std::vector<Btn> btn_lists;
   static Config &Instance();
 
   bool load();

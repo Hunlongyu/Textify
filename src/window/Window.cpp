@@ -4,9 +4,13 @@
 
 Window::Window()
 {
+  const auto &config_ = Config::Instance();
+  const auto lists = config_.btn_lists;
+  btnCount = lists.size();
   initWin();
   initTray();
-  initUI();
+  initInput();
+  initButtons();
 }
 
 Window::~Window() {}
@@ -24,8 +28,7 @@ LRESULT Window::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
   case WM_SYSICON: {
     // TODO: 鼠标左键双击打开设置界面
     if (lParam == WM_LBUTTONDBLCLK) {
-      const auto win = reinterpret_cast<Window *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
-      win->show();
+      if (hwnd) ShowWindow(hwnd, SW_SHOW);
       return 0;
     }
     if (lParam == WM_RBUTTONDOWN) {
@@ -41,20 +44,23 @@ LRESULT Window::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
   case WM_COMMAND: {
     if (HIWORD(wParam) == 0) {
       if (LOWORD(wParam) == ID_TRAY_SHOW) {
-        const auto win = reinterpret_cast<Window *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
-        if (win) win->show();
+        if (hwnd) ShowWindow(hwnd, SW_HIDE);
         return 0;
       }
       // TODO: 显示设置窗口
       if (LOWORD(wParam) == ID_TRAY_SETTINGS) {
-        const auto win = reinterpret_cast<Window *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
-        if (win) win->show();
+        if (hwnd) ShowWindow(hwnd, SW_SHOW);
         return 0;
       }
       if (LOWORD(wParam) == ID_TRAY_EXIT) {
         PostQuitMessage(0);
         return 0;
       }
+    }
+    if (HIWORD(wParam) == BN_CLICKED) {
+      const int btnId = LOWORD(wParam);
+      const auto win = reinterpret_cast<Window *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+      if (win) win->parseBtnHandle(btnId);
     }
   }
   default:
@@ -80,10 +86,13 @@ void Window::initWin()
     return;
   }
 
+  w = btnCount > 4 ? btnCount * 22 + 16 + ((btnCount - 1) * 4) : 100;
+  h = btnCount > 1 ? 62 : 36;
+
   hwnd_ = CreateWindowEx(WS_EX_TOPMOST,
     wc_.lpszClassName,
     wc_.lpszClassName,
-    WS_POPUP | WS_CLIPCHILDREN,
+    WS_POPUP | WS_DLGFRAME,
     100,
     100,
     w,
@@ -111,7 +120,7 @@ void Window::initTray()
   Shell_NotifyIcon(NIM_ADD, &nid_);
 }
 
-void Window::initUI()
+void Window::initInput()
 {
   input_ = CreateWindowEx(0,
     L"EDIT",
@@ -119,8 +128,8 @@ void Window::initUI()
     WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN,
     4,
     4,
-    w - 20,
-    (h - 20) - 20 - 4,
+    w - 16,
+    20,
     hwnd_,
     reinterpret_cast<HMENU>(IDC_INPUT),
     nullptr,
@@ -144,6 +153,41 @@ void Window::initUI()
   }
 }
 
+void Window::initButtons()
+{
+  if (!hwnd_) { return; }
+
+  const auto &config_ = Config::Instance();
+  const auto lists = config_.btn_lists;
+
+  if (lists.size() <= 0) {
+    hasBtn = false;
+    return;
+  }
+  hasBtn = true;
+
+  const auto h_instance = GetModuleHandle(nullptr);
+  for (auto i = 0; i < lists.size(); ++i) {
+    const auto btn = lists.at(i);
+    const HWND btnItem = CreateWindow(L"Button",
+      L"Button",
+      WS_VISIBLE | WS_CHILD | BS_ICON | BS_FLAT,
+      8 + (i * 22) + ((i - 1) * 4),
+      20 + 12,
+      22,
+      22,
+      hwnd_,
+      reinterpret_cast<HMENU>(i),
+      h_instance,
+      nullptr);
+
+    HICON btnIcon = static_cast<HICON>(LoadImage(nullptr, btn.icon.c_str(), IMAGE_ICON, 16, 16, LR_LOADFROMFILE));
+    SendMessage(btnItem, BM_SETIMAGE, IMAGE_ICON, reinterpret_cast<LPARAM>(btnIcon));
+  }
+
+  SetWindowPos(hwnd_, nullptr, 0, 0, w, h, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+}
+
 void Window::show() const
 {
   if (!hwnd_) { return; }
@@ -154,15 +198,27 @@ void Window::show(const POINT &point, const std::vector<size_t> &lengths, const 
 {
   text = txt;
   const auto count = unicode_character_count(text);
+  double iw;
   if (count * 10 < 100) {
-    w = 100;
+    iw = 100;
   } else {
-    w = static_cast<int>(count * 10);
+    iw = static_cast<int>(count * 10);
   }
-  h = static_cast<int>(lengths.size() + 1) * 20;
+  w = btnCount > 4 ? btnCount * 22 + 16 + ((btnCount - 1) * 4) : 100;
+  w = iw > w ? iw : w;
+  const double ih = static_cast<int>(lengths.size() + 1) * 20;
+  h = btnCount > 0 ? ih + 22 + 20 : ih + 14;
+
+  const int screenWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+  const int screenHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+
+  int px = point.x, py = point.y;
+  if (point.x + w > screenWidth) { px = screenWidth - w; }
+  if (point.y + h > screenHeight) { py = screenHeight - h; }
+
   SetWindowText(input_, text.c_str());
-  SetWindowPos(input_, nullptr, 0, 0, w, h, SWP_NOZORDER | SWP_NOMOVE);
-  SetWindowPos(hwnd_, nullptr, point.x, point.y, w + 8, h + 28, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+  SetWindowPos(input_, nullptr, 0, 0, w - 16, ih, SWP_NOZORDER | SWP_NOMOVE);
+  SetWindowPos(hwnd_, nullptr, px, py, w, h, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
   ShowWindow(hwnd_, SW_SHOW);
 }
 
@@ -197,4 +253,36 @@ size_t Window::unicode_character_count(const std::wstring &str)
     }
   }
   return count;
+}
+
+void Window::parseBtnHandle(int id)
+{
+  const auto &config_ = Config::Instance();
+  const auto lists = config_.btn_lists;
+  const auto btn = lists[id];
+  if (btn.type == L"copy") { copyContentToClipboard(); }
+}
+
+void Window::copyContentToClipboard() const
+{
+  std::cout << "copy" << std::endl;
+  const int length = GetWindowTextLength(input_) + 1;
+  wchar_t *buffer = new wchar_t[length];
+  GetWindowText(input_, buffer, length);
+
+  if (OpenClipboard(nullptr)) {
+    EmptyClipboard();
+    const HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, length * sizeof(wchar_t));
+    if (hGlobal) {
+      void *pGlobal = GlobalLock(hGlobal);
+      if (pGlobal) {
+        memcpy(pGlobal, buffer, length * sizeof(wchar_t));
+        GlobalUnlock(hGlobal);
+        SetClipboardData(CF_UNICODETEXT, hGlobal);
+      }
+    }
+    CloseClipboard();
+  }
+  delete[] buffer;
+  hide();
 }
