@@ -45,5 +45,5 @@ private:
   Config(const Config &);
   Config &operator=(const Config &);
 
-  fs::path find_config_filepath();
+  static fs::path find_config_filepath();
 };

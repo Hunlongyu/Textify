@@ -6,21 +6,19 @@
 
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+#ifdef _DEBUG
   if (AllocConsole()) {
     FILE *stream;
-    // stdout
     freopen_s(&stream, "CONOUT$", "w", stdout);
-    // stderr
     freopen_s(&stream, "CONOUT$", "w", stderr);
-    // stdin
     freopen_s(&stream, "CONIN$", "r", stdin);
   }
+#endif
 
   auto &config_ = Config::Instance();
-  config_.load();
+  if (!config_.load()) { return -1; }
 
   Window win;
-  // win.show();
 
   MouseHook::setGlobalMouseHook(&win, &config_);
   KeybdHook::setGlobalKeybdHook(&win);

@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "../../resources/resource.h"
 #include "../config/Config.h"
+#include <cwctype>
 #include <string>
 #include <vector>
 #include <windows.h>

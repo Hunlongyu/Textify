@@ -1,7 +1,5 @@
 ﻿#include "Config.h"
 #include "../../include/nlohmann/json.hpp"
-
-#include <codecvt>
 #include <iostream>
 
 using nlohmann::json;
@@ -64,7 +62,12 @@ bool Config::save() { return true; }
 // 递归查找 config.json 配置文件
 fs::path Config::find_config_filepath()
 {
-  const fs::path root = ".";
+  fs::path root;
+#ifdef _DEBUG
+  root = ".";
+#else
+  root = std::filesystem::current_path();
+#endif
   try {
     for (auto &p : fs::recursive_directory_iterator(root)) {
       if (p.path().filename() == "config.json") { return p.path(); }

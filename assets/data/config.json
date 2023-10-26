@@ -3,6 +3,7 @@
   "autoCopy": false,
   "autoStartup": false,
   "admin": false,
+  "max-width": 800,
   "hotkey": {
     "enable": true,
     "shift": true,
@@ -13,6 +14,12 @@
     "right": true
   },
   "list": [
+    {
+      "type": "hide",
+      "tips": "隐藏界面",
+      "icon": "assets/data/icons/close.ico",
+      "hide": true
+    },
     {
       "type": "copy",
       "tips": "复制到剪贴板",

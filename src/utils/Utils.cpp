@@ -14,23 +14,53 @@ void utils::getTextFromPointByUIA(POINT pt, std::wstring &outStr, std::vector<si
   hr = uia->ElementFromPoint(pt, &element);
   if (FAILED(hr) || !element) { return; }
 
-  std::wstring txt;
-  std::vector<size_t> lengths;
-  BSTR bsName;
-  hr = element->get_CurrentName(&bsName);
-  if (SUCCEEDED(hr) && bsName != nullptr) { processingText(txt, bsName, lengths); }
-  SysFreeString(bsName);
+  element.Release();
+  hr = uia->ElementFromPoint(pt, &element);
+  if (FAILED(hr) || !element) { return; }
 
-  VARIANT value;
-  hr = element->GetCurrentPropertyValue(UIA_ValueValuePropertyId, &value);
-  if (SUCCEEDED(hr) && value.vt == VT_BSTR && value.bstrVal && value.bstrVal != bsName) {
-    processingText(txt, value.bstrVal, lengths);
-  }
-  VariantClear(&value);
+  CComPtr<IUIAutomationCondition> trueCondition;
+  hr = uia->CreateTrueCondition(&trueCondition);
+  if (FAILED(hr) || !trueCondition) return;
 
-  if (!txt.empty()) {
-    outStr = txt;
-    outLengths = lengths;
+  CComPtr<IUIAutomationTreeWalker> treeWalker;
+  hr = uia->CreateTreeWalker(trueCondition, &treeWalker);
+  if (FAILED(hr) || !treeWalker) return;
+
+  int processId = 0;
+  hr = element->get_CurrentProcessId(&processId);
+  if (FAILED(hr)) return;
+
+  while (true) {
+    std::wstring txt;
+    std::vector<size_t> lengths;
+
+    BSTR bsName;
+    hr = element->get_CurrentName(&bsName);
+    if (SUCCEEDED(hr) && bsName != nullptr) { processingText(txt, bsName, lengths); }
+    SysFreeString(bsName);
+
+    VARIANT value;
+    hr = element->GetCurrentPropertyValue(UIA_ValueValuePropertyId, &value);
+    if (SUCCEEDED(hr) && value.vt == VT_BSTR && value.bstrVal && value.bstrVal != bsName) {
+      processingText(txt, value.bstrVal, lengths);
+    }
+    VariantClear(&value);
+
+    if (!txt.empty()) {
+      outStr = txt;
+      outLengths = lengths;
+      break;
+    }
+
+    CComPtr<IUIAutomationElement> parentElement;
+    hr = treeWalker->GetParentElement(element, &parentElement);
+    if (FAILED(hr) || !parentElement) break;
+
+    int compareProcessId = 0;
+    hr = parentElement->get_CurrentProcessId(&compareProcessId);
+    if (FAILED(hr) || compareProcessId != processId) break;
+
+    element.Attach(parentElement.Detach());
   }
 }
 

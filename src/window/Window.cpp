@@ -1,5 +1,6 @@
 ﻿#include "Window.h"
 
+#include <commctrl.h>
 #include <iostream>
 
 Window::Window()
@@ -44,7 +45,7 @@ LRESULT Window::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
   case WM_COMMAND: {
     if (HIWORD(wParam) == 0) {
       if (LOWORD(wParam) == ID_TRAY_SHOW) {
-        if (hwnd) ShowWindow(hwnd, SW_HIDE);
+        if (hwnd) ShowWindow(hwnd, SW_SHOW);
         return 0;
       }
       // TODO: 显示设置窗口
@@ -174,11 +175,11 @@ void Window::initButtons()
       L"Button",
       WS_VISIBLE | WS_CHILD | BS_ICON | BS_FLAT,
       8 + (i * 22) + ((i - 1) * 4),
-      20 + 12,
+      32,
       22,
       22,
       hwnd_,
-      reinterpret_cast<HMENU>(static_cast<intptr_t>(i)),
+      reinterpret_cast<HMENU>(i),
       h_instance,
       nullptr);
 
@@ -198,23 +199,24 @@ void Window::show() const
 
 void Window::show(const POINT &point, const std::vector<size_t> &lengths, const std::wstring &txt)
 {
+  const int screenWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+  const int screenHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
   text = txt;
+  int iw;
   const auto count = unicode_character_count(text);
   const int iCount = static_cast<int>(count);
-  int iw;
-  if (iCount * 10 < 100) {
+  if (iCount * 7 < 100) {
     iw = 100;
   } else {
-    iw = iCount * 10;
+    iw = iCount * 7;
   }
   w = btnCount > 4 ? btnCount * 22 + 16 + ((btnCount - 1) * 4) : 100;
   w = iw > w ? iw : w;
+  w = w > 800 ? 800 : w;
 
-  const int ih = static_cast<int>(lengths.size() + 1) * 20;
+  const int ih = static_cast<int>(lengths.size() + 1) * 21;
   h = btnCount > 0 ? ih + 22 + 20 : ih + 14;
 
-  const int screenWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-  const int screenHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
   int px = point.x, py = point.y;
   if (point.x + w > screenWidth) { px = screenWidth - w; }
@@ -250,25 +252,42 @@ HMENU Window::createTrayMenu()
 
 size_t Window::unicode_character_count(const std::wstring &str)
 {
-  size_t count = 0;
-  for (size_t i = 0; i < str.size(); ++i) {
-    wchar_t ch = str[i];
-    if (ch >= 0xD800 && ch <= 0xDBFF)// is high surrogate?
-    {
-      ++count;
-    } else if (!(ch >= 0xDC00 && ch <= 0xDFFF))// if it's not a low surrogate
-    {
-      ++count;
-    }
+  const std::wstring delimiter = L"\r\n";
+  std::vector<std::wstring> result;
+  size_t start = 0;
+  size_t end = str.find(delimiter);
+  while (end != std::wstring::npos) {
+    result.push_back(str.substr(start, end - start));
+    start = end + delimiter.length();
+    end = str.find(delimiter, start);
   }
-  return count;
+  result.push_back(str.substr(start, end));
+
+  size_t max = 0;
+  for (const auto &str : result) {
+    size_t half = 0, full = 0;
+    for (const auto ch : str) {
+      if (ch >= 0x0000 && ch <= 0x007F) {
+        ++half;
+      } else {
+        ++full;
+      }
+    }
+    std::cout << "half: " << half << std::endl;
+    std::cout << "full: " << full << " , " << full * 3 << std::endl;
+    const size_t count = half + full * 1.9;
+    if (count > max) max = count;
+  }
+  return max;
 }
 
 void Window::parseBtnHandle(int id) const
 {
   const auto &config_ = Config::Instance();
   const auto lists = config_.btn_lists;
+  if (id > lists.size()) { return; }
   const auto btn = lists[id];
+  if (btn.type == L"hide") { hide(); }
   if (btn.type == L"copy") { copyContentToClipboard(btn); }
   if (btn.type == L"translate") { openBrowserTranslate(btn); }
   if (btn.type == L"search") { openBrowserSearch(btn); }
