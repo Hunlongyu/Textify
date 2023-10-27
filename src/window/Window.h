@@ -45,6 +45,7 @@ private:
   HWND input_;
   NOTIFYICONDATA nid_;
   std::vector<HWND> btns_;
+  Config::ConfigData config_;
 
   int w = 108, h = 60;// 窗口宽高
   bool hasBtn{ false };

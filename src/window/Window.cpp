@@ -5,8 +5,8 @@
 
 Window::Window()
 {
-  const auto &config_ = Config::Instance();
-  const auto list = config_.m_config.list;
+  config_ = Config::Instance().m_config;
+  const auto list = config_.list;
   btnCount = static_cast<int>(list.size());
   initWin();
   initTray();
@@ -158,8 +158,7 @@ void Window::initButtons()
 {
   if (!hwnd_) { return; }
 
-  const auto &config_ = Config::Instance();
-  const auto list = config_.m_config.list;
+  const auto list = config_.list;
 
   if (list.size() <= 0) {
     hasBtn = false;
@@ -212,11 +211,10 @@ void Window::show(const POINT &point, const std::vector<size_t> &lengths, const 
   }
   w = btnCount > 4 ? btnCount * 22 + 16 + ((btnCount - 1) * 4) : 100;
   w = iw > w ? iw : w;
-  w = w > 800 ? 800 : w;
+  if (config_.maxWidth >= 100) { w = w > config_.maxWidth ? config_.maxWidth : w; }
 
   const int ih = static_cast<int>(lengths.size() + 1) * 21;
   h = btnCount > 0 ? ih + 22 + 20 : ih + 14;
-
 
   int px = point.x, py = point.y;
   if (point.x + w > screenWidth) { px = screenWidth - w; }
@@ -273,8 +271,6 @@ size_t Window::unicode_character_count(const std::wstring &str)
         ++full;
       }
     }
-    std::cout << "half: " << half << std::endl;
-    std::cout << "full: " << full << " , " << full * 3 << std::endl;
     const size_t count = half + full * 1.9;
     if (count > max) max = count;
   }
@@ -283,8 +279,7 @@ size_t Window::unicode_character_count(const std::wstring &str)
 
 void Window::parseBtnHandle(int id) const
 {
-  const auto &config_ = Config::Instance();
-  const auto list = config_.m_config.list;
+  const auto list = config_.list;
   if (id > list.size()) { return; }
   const auto btn = list[id];
   if (btn.type == L"hide") { hide(); }
