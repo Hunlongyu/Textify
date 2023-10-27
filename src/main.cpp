@@ -16,7 +16,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #endif
 
   auto &config_ = Config::Instance();
-  if (!config_.load()) { return -1; }
+  if (!config_.init()) { return -1; }
 
   Window win;
 

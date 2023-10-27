@@ -2,7 +2,7 @@
   "checkForUpdate": false,
   "autoCopy": false,
   "autoStartup": false,
-  "admin": false,
+  "admin": true,
   "max-width": 800,
   "hotkey": {
     "enable": true,

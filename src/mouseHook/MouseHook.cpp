@@ -72,7 +72,7 @@ void MouseHook::unhookGlobalMouseHook() { UnhookWindowsHookEx(hMouseHook); }
 
 bool MouseHook::checkConfigMouse(const std::string &str)
 {
-  const auto hotkey = config_->m_HotKey;
+  const auto hotkey = config_->m_config.hotkey;
   if (!hotkey.enable) { return false; }
   if (hotkey.left && str == "left") { return true; }
   if (hotkey.mid && str == "mid") { return true; }
@@ -87,7 +87,7 @@ bool MouseHook::checkKeybdState()
     return hotKey && (keyState & 0x8000);
   };
 
-  const auto hotkey = config_->m_HotKey;
+  const auto hotkey = config_->m_config.hotkey;
   const bool flag = isOK(hotkey.shift, VK_SHIFT) || isOK(hotkey.ctrl, VK_CONTROL) || isOK(hotkey.alt, VK_MENU);
   return flag;
 }

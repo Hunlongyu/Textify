@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include <Windows.h>
 #include <filesystem>
 #include <fstream>
 #include <mutex>
@@ -28,10 +29,21 @@ public:
     bool hide{ false };
   };
 
-  HotKey m_HotKey;
-  std::vector<Btn> btn_lists;
+  struct ConfigData
+  {
+    bool checkForUpdate{ false };
+    bool autoStartup{ false };
+    bool admin{ false };
+    int maxWidth{ 800 };
+    HotKey hotkey;
+    std::vector<Btn> list;
+  };
+
+  ConfigData m_config;
+
   static Config &Instance();
 
+  bool init();
   bool load();
   bool save();
 
@@ -46,4 +58,13 @@ private:
   Config &operator=(const Config &);
 
   static fs::path find_config_filepath();
+
+  // 检查配置是否生效
+  bool checkConfig() const;
+
+  // 检查软件是否以管理员权限启动
+  static bool isRunAsAdmin();
+
+  // 尝试管理员权限启动
+  static bool ElevateNow();
 };

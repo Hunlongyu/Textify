@@ -6,8 +6,8 @@
 Window::Window()
 {
   const auto &config_ = Config::Instance();
-  const auto lists = config_.btn_lists;
-  btnCount = static_cast<int>(lists.size());
+  const auto list = config_.m_config.list;
+  btnCount = static_cast<int>(list.size());
   initWin();
   initTray();
   initInput();
@@ -159,9 +159,9 @@ void Window::initButtons()
   if (!hwnd_) { return; }
 
   const auto &config_ = Config::Instance();
-  const auto lists = config_.btn_lists;
+  const auto list = config_.m_config.list;
 
-  if (lists.size() <= 0) {
+  if (list.size() <= 0) {
     hasBtn = false;
     return;
   }
@@ -169,8 +169,8 @@ void Window::initButtons()
 
   const auto h_instance = GetModuleHandle(nullptr);
   btns_.clear();
-  for (auto i = 0; i < lists.size(); ++i) {
-    const auto btn = lists.at(i);
+  for (auto i = 0; i < list.size(); ++i) {
+    const auto btn = list.at(i);
     const HWND btnItem = CreateWindow(L"Button",
       L"Button",
       WS_VISIBLE | WS_CHILD | BS_ICON | BS_FLAT,
@@ -284,9 +284,9 @@ size_t Window::unicode_character_count(const std::wstring &str)
 void Window::parseBtnHandle(int id) const
 {
   const auto &config_ = Config::Instance();
-  const auto lists = config_.btn_lists;
-  if (id > lists.size()) { return; }
-  const auto btn = lists[id];
+  const auto list = config_.m_config.list;
+  if (id > list.size()) { return; }
+  const auto btn = list[id];
   if (btn.type == L"hide") { hide(); }
   if (btn.type == L"copy") { copyContentToClipboard(btn); }
   if (btn.type == L"translate") { openBrowserTranslate(btn); }
