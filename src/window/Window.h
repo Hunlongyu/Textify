@@ -10,7 +10,7 @@ class Window
 {
 public:
   Window();
-  ~Window();
+  ~Window() = default;
 
   HWND get() const { return hwnd_; }
 
