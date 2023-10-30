@@ -10,7 +10,7 @@ class Window
 {
 public:
   Window();
-  ~Window() = default;
+  ~Window();
 
   HWND get() const { return hwnd_; }
 
@@ -46,6 +46,8 @@ private:
   NOTIFYICONDATA nid_;
   std::vector<HWND> btns_;
   Config::ConfigData config_;
+  CWin &cwin_;
+
 
   int w = 108, h = 60;// 窗口宽高
   bool hasBtn{ false };

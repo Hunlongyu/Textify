@@ -1,4 +1,5 @@
-﻿#include "config/Config.h"
+﻿#include "config/CWin.h"
+#include "config/Config.h"
 #include "keybdHook/KeybdHook.h"
 #include "mouseHook/MouseHook.h"
 #include "window/Window.h"
@@ -14,7 +15,6 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     freopen_s(&stream, "CONIN$", "r", stdin);
   }
 #endif
-
   auto &config_ = Config::Instance();
   if (!config_.init()) { return -1; }
 
@@ -31,6 +31,5 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
   MouseHook::unhookGlobalMouseHook();
   KeybdHook::unhookGlobalKeybdHook();
-
   return 0;
 }

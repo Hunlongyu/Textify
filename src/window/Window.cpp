@@ -1,9 +1,8 @@
 ﻿#include "Window.h"
-
 #include <commctrl.h>
 #include <iostream>
 
-Window::Window()
+Window::Window() : cwin_(CWin::Instance())
 {
   config_ = Config::Instance().m_config;
   const auto list = config_.list;
@@ -27,7 +26,6 @@ LRESULT Window::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     break;
   }
   case WM_SYSICON: {
-    // TODO: 鼠标左键双击打开设置界面
     if (lParam == WM_LBUTTONDBLCLK) {
       if (hwnd) ShowWindow(hwnd, SW_SHOW);
       return 0;
@@ -50,7 +48,9 @@ LRESULT Window::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       }
       // TODO: 显示设置窗口
       if (LOWORD(wParam) == ID_TRAY_SETTINGS) {
-        if (hwnd) ShowWindow(hwnd, SW_SHOW);
+        const auto win = reinterpret_cast<Window *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+        const HWND c_hwnd = win->cwin_.getHwnd();
+        if (c_hwnd) ShowWindow(c_hwnd, SW_SHOW);
         return 0;
       }
       if (LOWORD(wParam) == ID_TRAY_EXIT) {
