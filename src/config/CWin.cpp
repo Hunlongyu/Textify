@@ -3,11 +3,25 @@
 std::unique_ptr<CWin> CWin::instance_ = nullptr;
 std::mutex CWin::mutex_;
 HWND CWin::hwnd_ = nullptr;
+HBRUSH CWin::hBrushWhite_ = nullptr;
+HBRUSH CWin::hBrushWhiteBk_ = nullptr;
 
-CWin::CWin() { initWin(); }
+CWin::CWin()
+{
+  config_ = Config::Instance().m_config;
+  hBrushWhite_ = CreateSolidBrush(RGB(255, 255, 255));
+  hBrushWhiteBk_ = CreateSolidBrush(RGB(255, 255, 255));
+  initWin();
+  initUI();
+}
 
-CWin::~CWin() {}
-
+CWin::~CWin()
+{
+  DeleteObject(hFont);
+  DeleteObject(hFontTitle);
+  DeleteObject(hBrushWhite_);
+  DeleteObject(hBrushWhiteBk_);
+}
 
 CWin &CWin::Instance()
 {
@@ -44,8 +58,8 @@ void CWin::initWin()
     WS_OVERLAPPEDWINDOW,
     100,
     100,
-    500,
-    400,
+    365,
+    210,
     nullptr,
     nullptr,
     h_instance,
@@ -57,16 +71,131 @@ void CWin::initWin()
   SetWindowLongPtr(hwnd_, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 }
 
-void CWin::initTable() {}
-void CWin::initButtons() {}
+void CWin::initUI()
+{
+  hFont = CreateFont(18,
+    0,
+    0,
+    0,
+    FW_NORMAL,
+    FALSE,
+    FALSE,
+    FALSE,
+    DEFAULT_CHARSET,
+    OUT_DEFAULT_PRECIS,
+    CLIP_DEFAULT_PRECIS,
+    DEFAULT_QUALITY,
+    DEFAULT_PITCH | FF_SWISS,
+    L"Microsoft YaHei");
+  hFontTitle = CreateFont(24,
+    0,
+    0,
+    0,
+    FW_NORMAL,
+    FALSE,
+    FALSE,
+    FALSE,
+    DEFAULT_CHARSET,
+    OUT_DEFAULT_PRECIS,
+    CLIP_DEFAULT_PRECIS,
+    DEFAULT_QUALITY,
+    DEFAULT_PITCH | FF_SWISS,
+    L"Microsoft YaHei");
 
-void CWin::show() const
+  HWND hw;
+  hw = CreateWindow(
+    L"STATIC", L"组合快捷键", WS_VISIBLE | WS_CHILD | SS_LEFT, 10, 10, 200, 20, hwnd_, (HMENU)ID_TITLE, NULL, NULL);
+  SendMessage(hw, WM_SETFONT, (WPARAM)hFontTitle, TRUE);
+
+  hw = CreateWindow(L"BUTTON",
+    L"Shift 键",
+    WS_VISIBLE | WS_CHILD | BS_RADIOBUTTON,
+    10,
+    40,
+    80,
+    30,
+    hwnd_,
+    (HMENU)ID_R_SHIFT,
+    NULL,
+    NULL);
+  SendMessage(hw, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+  hw = CreateWindow(L"BUTTON",
+    L"Ctrl 键",
+    WS_VISIBLE | WS_CHILD | BS_RADIOBUTTON,
+    100,
+    40,
+    80,
+    30,
+    hwnd_,
+    (HMENU)ID_R_CTRL,
+    NULL,
+    NULL);
+  SendMessage(hw, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+  hw = CreateWindow(
+    L"BUTTON", L"Alt 键", WS_VISIBLE | WS_CHILD | BS_RADIOBUTTON, 190, 40, 80, 30, hwnd_, (HMENU)ID_R_ALT, NULL, NULL);
+  SendMessage(hw, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+  hw = CreateWindow(
+    L"BUTTON", L"鼠标中键", WS_VISIBLE | WS_CHILD | BS_RADIOBUTTON, 10, 70, 80, 30, hwnd_, (HMENU)ID_R_MID, NULL, NULL);
+  SendMessage(hw, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+  hw = CreateWindow(L"BUTTON",
+    L"鼠标右键",
+    WS_VISIBLE | WS_CHILD | BS_RADIOBUTTON,
+    100,
+    70,
+    80,
+    30,
+    hwnd_,
+    (HMENU)ID_R_RIGHT,
+    NULL,
+    NULL);
+  SendMessage(hw, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+  hw = CreateWindow(L"BUTTON",
+    L"管理员权限启动",
+    WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX,
+    10,
+    130,
+    120,
+    30,
+    hwnd_,
+    (HMENU)ID_C_ADMIN,
+    NULL,
+    NULL);
+  SendMessage(hw, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+  hw = CreateWindow(
+    L"BUTTON", L"保存", WS_VISIBLE | WS_CHILD | BS_FLAT, 140, 130, 60, 30, hwnd_, (HMENU)ID_B_SAVE, NULL, NULL);
+  SendMessage(hw, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+  hw = CreateWindow(
+    L"BUTTON", L"取消", WS_VISIBLE | WS_CHILD | BS_FLAT, 210, 130, 60, 30, hwnd_, (HMENU)ID_B_CANCEL, NULL, NULL);
+  SendMessage(hw, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+  hw = CreateWindow(
+    L"BUTTON", L"高级", WS_VISIBLE | WS_CHILD | BS_FLAT, 280, 130, 60, 30, hwnd_, (HMENU)ID_B_DIY, NULL, NULL);
+  SendMessage(hw, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+  if (config_.hotkey.shift) { SendMessage(GetDlgItem(hwnd_, ID_R_SHIFT), BM_SETCHECK, BST_CHECKED, 0); }
+  if (config_.hotkey.ctrl) { SendMessage(GetDlgItem(hwnd_, ID_R_CTRL), BM_SETCHECK, BST_CHECKED, 0); }
+  if (config_.hotkey.alt) { SendMessage(GetDlgItem(hwnd_, ID_R_ALT), BM_SETCHECK, BST_CHECKED, 0); }
+
+  if (config_.hotkey.mid) { SendMessage(GetDlgItem(hwnd_, ID_R_MID), BM_SETCHECK, BST_CHECKED, 0); }
+  if (config_.hotkey.right) { SendMessage(GetDlgItem(hwnd_, ID_R_RIGHT), BM_SETCHECK, BST_CHECKED, 0); }
+
+  if (config_.admin) { SendMessage(GetDlgItem(hwnd_, ID_C_ADMIN), BM_SETCHECK, BST_CHECKED, 0); }
+}
+
+void CWin::show()
 {
   if (!hwnd_) { return; }
   ShowWindow(hwnd_, SW_SHOW);
 }
 
-void CWin::hide() const
+void CWin::hide()
 {
   if (!hwnd_) { return; }
   ShowWindow(hwnd_, SW_HIDE);
@@ -79,6 +208,73 @@ LRESULT CWin::WndProc(HWND hwnd_, UINT msg, WPARAM wParam, LPARAM lParam)
     ShowWindow(hwnd_, SW_HIDE);
     break;
   }
+  case WM_COMMAND: {
+    CWin *win = reinterpret_cast<CWin *>(GetWindowLongPtr(hwnd_, GWLP_USERDATA));
+    switch (LOWORD(wParam)) {
+    case ID_R_SHIFT: {
+
+      CheckRadioButton(hwnd_, ID_R_SHIFT, ID_R_ALT, LOWORD(wParam));
+      win->config_.hotkey.shift = true;
+      win->config_.hotkey.ctrl = false;
+      win->config_.hotkey.alt = false;
+      break;
+    }
+    case ID_R_CTRL: {
+
+      CheckRadioButton(hwnd_, ID_R_SHIFT, ID_R_ALT, LOWORD(wParam));
+      win->config_.hotkey.shift = false;
+      win->config_.hotkey.ctrl = true;
+      win->config_.hotkey.alt = false;
+      break;
+    }
+    case ID_R_ALT: {
+
+      CheckRadioButton(hwnd_, ID_R_SHIFT, ID_R_ALT, LOWORD(wParam));
+      win->config_.hotkey.shift = false;
+      win->config_.hotkey.ctrl = false;
+      win->config_.hotkey.alt = true;
+      break;
+    }
+    case ID_R_MID: {
+
+      CheckRadioButton(hwnd_, ID_R_MID, ID_R_RIGHT, LOWORD(wParam));
+      win->config_.hotkey.mid = true;
+      win->config_.hotkey.right = false;
+      break;
+    }
+    case ID_R_RIGHT: {
+
+      CheckRadioButton(hwnd_, ID_R_MID, ID_R_RIGHT, LOWORD(wParam));
+      win->config_.hotkey.mid = false;
+      win->config_.hotkey.right = true;
+      break;
+    }
+    case ID_C_ADMIN: {
+      const LRESULT isChecked = SendMessage(GetDlgItem(hwnd_, ID_C_ADMIN), BM_GETCHECK, 0, 0);
+      win->config_.admin = (isChecked == BST_CHECKED);
+      break;
+    }
+    case ID_B_SAVE: {
+      OnSaveButtonClicked();
+      break;
+    }
+    case ID_B_CANCEL: {
+      OnCancelButtonClicked();
+      break;
+    }
+    case ID_B_DIY: {
+      OnDIYButtonClicked();
+      break;
+    }
+    }
+    break;
+  }
+  case WM_CTLCOLORBTN:
+  case WM_CTLCOLORSTATIC: {
+    HDC hdc = (HDC)wParam;
+    SetBkMode(hdc, TRANSPARENT);
+    return (LONG)hBrushWhite_;
+  }
   default:
     return DefWindowProc(hwnd_, msg, wParam, lParam);
   }
@@ -86,5 +282,10 @@ LRESULT CWin::WndProc(HWND hwnd_, UINT msg, WPARAM wParam, LPARAM lParam)
   return 0;
 }
 
-void CWin::OnSaveButtonClicked() {}
-void CWin::OnCancelButtonClicked() {}
+void CWin::OnSaveButtonClicked() { Config::Instance().save(); }
+void CWin::OnCancelButtonClicked() { hide(); }
+void CWin::OnDIYButtonClicked()
+{
+  const std::string currentDir = ".\\";
+  ShellExecuteA(hwnd_, "open", "explorer.exe", currentDir.c_str(), nullptr, SW_SHOWDEFAULT);
+}

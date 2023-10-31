@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "../../resources/resource.h"
+#include "../config/CWin.h"
 #include "../config/Config.h"
 #include <cwctype>
 #include <string>

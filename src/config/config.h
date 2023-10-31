@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include "../config/CWin.h"
 #include <Windows.h>
 #include <filesystem>
 #include <fstream>

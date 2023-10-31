@@ -80,7 +80,13 @@ bool Config::load()
   return true;
 }
 
-bool Config::save() { return true; }
+bool Config::save()
+{
+  const bool admin = m_config.admin;
+  std::wstring adminStatus = admin ? L"True" : L"False";
+  MessageBox(nullptr, adminStatus.c_str(), L"Admin", NULL);
+  return true;
+}
 
 // 检查配置文件，并使其生效
 bool Config::checkConfig() const
@@ -156,3 +162,5 @@ fs::path Config::find_config_filepath()
   } catch (...) {}
   return {};
 }
+
+// 修改参数
