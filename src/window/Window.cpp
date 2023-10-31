@@ -46,7 +46,6 @@ LRESULT Window::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         if (hwnd) ShowWindow(hwnd, SW_SHOW);
         return 0;
       }
-      // TODO: 显示设置窗口
       if (LOWORD(wParam) == ID_TRAY_SETTINGS) {
         const auto win = reinterpret_cast<Window *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
         const HWND c_hwnd = win->cwin_.getHwnd();
@@ -87,7 +86,7 @@ void Window::initWin()
     return;
   }
 
-  w = btnCount > 4 ? btnCount * 22 + 16 + ((btnCount - 1) * 4) : 100;
+  w = btnCount > 4 ? btnCount * 22 + 16 + ((btnCount - 1) * 4) : 116;
   h = btnCount > 1 ? 62 : 36;
 
   hwnd_ = CreateWindowEx(WS_EX_TOPMOST,
@@ -204,12 +203,12 @@ void Window::show(const POINT &point, const std::vector<size_t> &lengths, const 
   int iw;
   const auto count = unicode_character_count(text);
   const int iCount = static_cast<int>(count);
-  if (iCount * 7 < 100) {
+  if (iCount * 8 < 100) {
     iw = 100;
   } else {
-    iw = iCount * 7;
+    iw = iCount * 8;
   }
-  w = btnCount > 4 ? btnCount * 22 + 16 + ((btnCount - 1) * 4) : 100;
+  w = btnCount > 4 ? btnCount * 22 + 16 + ((btnCount - 1) * 4) : 116;
   w = iw > w ? iw : w;
   if (config_.maxWidth >= 100) { w = w > config_.maxWidth ? config_.maxWidth : w; }
 
@@ -271,7 +270,7 @@ size_t Window::unicode_character_count(const std::wstring &str)
         ++full;
       }
     }
-    const size_t count = half + full * 1.9;
+    const size_t count = half + full * 2;
     if (count > max) max = count;
   }
   return max;
@@ -284,8 +283,7 @@ void Window::parseBtnHandle(int id) const
   const auto btn = list[id];
   if (btn.type == L"hide") { hide(); }
   if (btn.type == L"copy") { copyContentToClipboard(btn); }
-  if (btn.type == L"translate") { openBrowserTranslate(btn); }
-  if (btn.type == L"search") { openBrowserSearch(btn); }
+  if (btn.type == L"web") { openBrowser(btn); }
 }
 
 void Window::copyContentToClipboard(const Config::Btn &btn) const
@@ -351,31 +349,7 @@ std::wstring Window::StringToWString(const std::string &str)
   return wstr;
 }
 
-void Window::openBrowserTranslate(const Config::Btn &btn) const
-{
-  const int length = GetWindowTextLength(input_) + 1;
-  if (length == 1) { return; }
-
-  const auto buffer = std::make_unique<wchar_t[]>(length);
-  GetWindowText(input_, buffer.get(), length);
-
-  const std::wstring wstr(buffer.get());
-  auto str = WStringToString(wstr);
-  str = urlEncode(str);
-
-  const auto txt = StringToWString(str);
-  const auto cmd = btn.command;
-  const size_t size = cmd.length() + txt.length() * 2;
-  wchar_t *cmdBuffer = new wchar_t[size];
-  swprintf(cmdBuffer, size, cmd.c_str(), txt.c_str());
-  const std::wstring replacedUrl(cmdBuffer);
-  delete[] cmdBuffer;
-
-  ShellExecuteW(nullptr, L"open", replacedUrl.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
-  if (btn.hide) { hide(); }
-}
-
-void Window::openBrowserSearch(const Config::Btn &btn) const
+void Window::openBrowser(const Config::Btn &btn) const
 {
   const int length = GetWindowTextLength(input_) + 1;
   if (length == 1) { return; }

@@ -1,5 +1,7 @@
 ﻿#include "Utils.h"
 
+#include <iostream>
+
 void utils::getTextFromPointByUIA(POINT pt, std::wstring &outStr, std::vector<size_t> &outLengths)
 {
   outStr.clear();
@@ -43,8 +45,8 @@ void utils::getTextFromPointByUIA(POINT pt, std::wstring &outStr, std::vector<si
 
     VARIANT value;
     hr = element->GetCurrentPropertyValue(UIA_ValueValuePropertyId, &value);
-    if (SUCCEEDED(hr) && value.vt == VT_BSTR && value.bstrVal && value.bstrVal != bsName) {
-      processingText(txt, value.bstrVal, lengths);
+    if (SUCCEEDED(hr) && value.vt == VT_BSTR && value.bstrVal) {
+      if (!AreBSTREqual(bsName, value.bstrVal)) { processingText(txt, value.bstrVal, lengths); }
     }
 
     SysFreeString(bsName);
@@ -67,6 +69,17 @@ void utils::getTextFromPointByUIA(POINT pt, std::wstring &outStr, std::vector<si
     depth++;
     element.Attach(parentElement.Detach());
   }
+}
+
+bool utils::AreBSTREqual(const BSTR &b1, const BSTR &b2)
+{
+  UINT len1 = SysStringLen(b1);
+  UINT len2 = SysStringLen(b2);
+
+  if (len1 != len2) return false;// 长度不相等，字符串肯定不相等
+
+  // 使用内存比较函数比较字符串内容
+  return memcmp(b1, b2, len1 * sizeof(OLECHAR)) == 0;
 }
 
 void utils::processingText(std::wstring &txt, const std::wstring &str, std::vector<size_t> &lengthList)

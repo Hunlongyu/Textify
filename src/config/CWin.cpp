@@ -87,7 +87,7 @@ void CWin::initUI()
     DEFAULT_QUALITY,
     DEFAULT_PITCH | FF_SWISS,
     L"Microsoft YaHei");
-  hFontTitle = CreateFont(24,
+  hFontTitle = CreateFont(22,
     0,
     0,
     0,
@@ -189,6 +189,26 @@ void CWin::initUI()
   if (config_.admin) { SendMessage(GetDlgItem(hwnd_, ID_C_ADMIN), BM_SETCHECK, BST_CHECKED, 0); }
 }
 
+void CWin::restartApp()
+{
+  STARTUPINFO si;
+  PROCESS_INFORMATION pi;
+
+  ZeroMemory(&si, sizeof(si));
+  si.cb = sizeof(si);
+  ZeroMemory(&pi, sizeof(pi));
+
+  LPWSTR cmdLine = GetCommandLineW();// 获取当前应用程序的命令行参数
+  LPWSTR appName = nullptr;// 应用程序名称，设为NULL表示使用命令行第一个参数
+
+  if (!CreateProcess(nullptr, cmdLine, nullptr, nullptr, FALSE, 0, nullptr, nullptr, &si, &pi)) {
+    MessageBox(nullptr, L"CreateProcess failed.", L"Error", MB_OK);
+  }
+
+  // 当前进程退出
+  ExitProcess(/*exitCode*/ 0);
+}
+
 void CWin::show()
 {
   if (!hwnd_) { return; }
@@ -209,49 +229,58 @@ LRESULT CWin::WndProc(HWND hwnd_, UINT msg, WPARAM wParam, LPARAM lParam)
     break;
   }
   case WM_COMMAND: {
-    CWin *win = reinterpret_cast<CWin *>(GetWindowLongPtr(hwnd_, GWLP_USERDATA));
+    auto win = reinterpret_cast<CWin *>(GetWindowLongPtr(hwnd_, GWLP_USERDATA));
     switch (LOWORD(wParam)) {
     case ID_R_SHIFT: {
-
       CheckRadioButton(hwnd_, ID_R_SHIFT, ID_R_ALT, LOWORD(wParam));
       win->config_.hotkey.shift = true;
+      Config::Instance().change("hotkey.shift", true);
       win->config_.hotkey.ctrl = false;
+      Config::Instance().change("hotkey.ctrl", false);
       win->config_.hotkey.alt = false;
+      Config::Instance().change("hotkey.alt", false);
       break;
     }
     case ID_R_CTRL: {
-
       CheckRadioButton(hwnd_, ID_R_SHIFT, ID_R_ALT, LOWORD(wParam));
       win->config_.hotkey.shift = false;
+      Config::Instance().change("hotkey.shift", false);
       win->config_.hotkey.ctrl = true;
+      Config::Instance().change("hotkey.ctrl", true);
       win->config_.hotkey.alt = false;
+      Config::Instance().change("hotkey.alt", false);
       break;
     }
     case ID_R_ALT: {
-
       CheckRadioButton(hwnd_, ID_R_SHIFT, ID_R_ALT, LOWORD(wParam));
       win->config_.hotkey.shift = false;
+      Config::Instance().change("hotkey.shift", false);
       win->config_.hotkey.ctrl = false;
+      Config::Instance().change("hotkey.ctrl", false);
       win->config_.hotkey.alt = true;
+      Config::Instance().change("hotkey.alt", true);
       break;
     }
     case ID_R_MID: {
-
       CheckRadioButton(hwnd_, ID_R_MID, ID_R_RIGHT, LOWORD(wParam));
       win->config_.hotkey.mid = true;
+      Config::Instance().change("hotkey.mid", true);
       win->config_.hotkey.right = false;
+      Config::Instance().change("hotkey.right", false);
       break;
     }
     case ID_R_RIGHT: {
-
       CheckRadioButton(hwnd_, ID_R_MID, ID_R_RIGHT, LOWORD(wParam));
       win->config_.hotkey.mid = false;
+      Config::Instance().change("hotkey.mid", false);
       win->config_.hotkey.right = true;
+      Config::Instance().change("hotkey.right", true);
       break;
     }
     case ID_C_ADMIN: {
       const LRESULT isChecked = SendMessage(GetDlgItem(hwnd_, ID_C_ADMIN), BM_GETCHECK, 0, 0);
-      win->config_.admin = (isChecked == BST_CHECKED);
+      const bool flag = (isChecked == BST_CHECKED);
+      Config::Instance().change("admin", flag);
       break;
     }
     case ID_B_SAVE: {
@@ -271,7 +300,7 @@ LRESULT CWin::WndProc(HWND hwnd_, UINT msg, WPARAM wParam, LPARAM lParam)
   }
   case WM_CTLCOLORBTN:
   case WM_CTLCOLORSTATIC: {
-    HDC hdc = (HDC)wParam;
+    auto hdc = (HDC)wParam;
     SetBkMode(hdc, TRANSPARENT);
     return (LONG)hBrushWhite_;
   }
@@ -282,8 +311,13 @@ LRESULT CWin::WndProc(HWND hwnd_, UINT msg, WPARAM wParam, LPARAM lParam)
   return 0;
 }
 
-void CWin::OnSaveButtonClicked() { Config::Instance().save(); }
+void CWin::OnSaveButtonClicked()
+{
+  const auto flag = Config::Instance().save();
+  if (flag) { restartApp(); }
+}
 void CWin::OnCancelButtonClicked() { hide(); }
+
 void CWin::OnDIYButtonClicked()
 {
   const std::string currentDir = ".\\";

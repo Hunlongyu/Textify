@@ -1,57 +1,47 @@
-﻿{
-  "checkForUpdate": false,
-  "autoStartup": false,
+{
   "admin": false,
-  "max-width": 800,
+  "autoStartup": false,
+  "checkForUpdate": false,
+  "exclude": [
+    "nekoray",
+    "GitHubDesktop.exe"
+  ],
   "hotkey": {
-    "enable": true,
-    "shift": true,
-    "ctrl": false,
     "alt": false,
+    "ctrl": false,
+    "enable": true,
     "left": false,
     "mid": false,
-    "right": true
+    "right": true,
+    "shift": true
   },
   "list": [
     {
-      "type": "hide",
-      "tips": "隐藏界面",
+      "hide": true,
       "icon": "data/icons/close.ico",
-      "hide": true
+      "tips": "隐藏界面",
+      "type": "hide"
     },
     {
-      "type": "copy",
-      "tips": "复制到剪贴板",
+      "hide": true,
       "icon": "data/icons/copy.ico",
-      "hide": true
+      "tips": "复制到剪贴板",
+      "type": "copy"
     },
     {
-      "type": "search",
-      "tips": "百度搜索",
-      "icon": "data/icons/baidu.ico",
       "command": "https://www.baidu.com/s?wd=%s",
-      "hide": true
+      "hide": true,
+      "icon": "data/icons/baidu.ico",
+      "tips": "百度搜索",
+      "type": "web"
     },
     {
-      "type": "search",
-      "tips": "谷歌搜索",
-      "icon": "data/icons/google.ico",
-      "command": "https://www.google.com/search?q=%s",
-      "hide": true
-    },
-    {
-      "type": "translate",
-      "tips": "谷歌翻译",
-      "icon": "data/icons/gt.ico",
-      "command": "https://translate.google.com/?sl=auto&tl=zh-CN&text=%s&op=translate",
-      "hide": true
-    },
-    {
-      "type": "translate",
-      "tips": "百度翻译",
-      "icon": "data/icons/google_translate.ico",
       "command": "https://fanyi.baidu.com/#auto/auto/%s",
-      "hide": true
+      "hide": true,
+      "icon": "data/icons/bdfy.ico",
+      "tips": "百度翻译",
+      "type": "web"
     }
-  ]
+  ],
+  "max-width": 800
 }

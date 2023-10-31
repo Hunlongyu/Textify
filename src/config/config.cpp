@@ -31,6 +31,8 @@ bool Config::load()
   const auto configPath = find_config_filepath();
   if (configPath.empty()) { return false; }
 
+  configJsonPath_ = configPath;
+
   json jsonObj;
   std::ifstream jsonFile(configPath);
   try {
@@ -69,6 +71,13 @@ bool Config::load()
       m_config.list.push_back(btn);
     }
 
+    m_config.exclude.clear();
+    const auto excludes = jsonObj["exclude"];
+    for (const auto &item : excludes) {
+      const auto exclude = item.get<std::string>();
+      m_config.exclude.emplace_back(exclude.begin(), exclude.end());
+    }
+
     m_config.checkForUpdate = jsonObj.value("checkForUpdate", false);
     m_config.autoStartup = jsonObj.value("autoStartup", false);
     m_config.admin = jsonObj.value("admin", false);
@@ -82,10 +91,67 @@ bool Config::load()
 
 bool Config::save()
 {
-  const bool admin = m_config.admin;
-  std::wstring adminStatus = admin ? L"True" : L"False";
-  MessageBox(nullptr, adminStatus.c_str(), L"Admin", NULL);
+  json jsonObj;
+  jsonObj["hotkey"]["enable"] = m_config.hotkey.enable;
+  jsonObj["hotkey"]["shift"] = m_config.hotkey.shift;
+  jsonObj["hotkey"]["alt"] = m_config.hotkey.alt;
+  jsonObj["hotkey"]["ctrl"] = m_config.hotkey.ctrl;
+  jsonObj["hotkey"]["left"] = m_config.hotkey.left;
+  jsonObj["hotkey"]["mid"] = m_config.hotkey.mid;
+  jsonObj["hotkey"]["right"] = m_config.hotkey.right;
+
+  jsonObj["list"].clear();
+  for (const auto &item : m_config.list) {
+    json btn;
+    btn["type"] = std::string(item.type.begin(), item.type.end());
+    btn["tips"] = std::string(item.tips.begin(), item.tips.end());
+    btn["icon"] = std::string(item.icon.begin(), item.icon.end());
+    btn["hide"] = item.hide;
+    if (!item.command.empty()) { btn["command"] = std::string(item.command.begin(), item.command.end()); }
+    jsonObj["list"].push_back(btn);
+  }
+
+  jsonObj["exclude"].clear();
+  for (const auto &item : m_config.exclude) { jsonObj["exclude"].push_back(std::string(item.begin(), item.end())); }
+
+  jsonObj["admin"] = m_config.admin;
+  jsonObj["autoStartup"] = m_config.autoStartup;
+  jsonObj["checkForUpdate"] = m_config.checkForUpdate;
+  jsonObj["max-width"] = m_config.maxWidth;
+
+  std::ofstream jsonFile(configJsonPath_);
+  jsonFile << jsonObj.dump(2) << std::endl;
+  jsonFile.close();
   return true;
+}
+
+bool Config::change(const std::string &key, const bool &value)
+{
+  if (key == "admin") {
+    m_config.admin = value;
+    return true;
+  }
+  if (key == "hotkey.shift") {
+    m_config.hotkey.shift = value;
+    return true;
+  }
+  if (key == "hotkey.ctrl") {
+    m_config.hotkey.ctrl = value;
+    return true;
+  }
+  if (key == "hotkey.alt") {
+    m_config.hotkey.alt = value;
+    return true;
+  }
+  if (key == "hotkey.mid") {
+    m_config.hotkey.mid = value;
+    return true;
+  }
+  if (key == "hotkey.right") {
+    m_config.hotkey.right = value;
+    return true;
+  }
+  return false;
 }
 
 // 检查配置文件，并使其生效
@@ -100,16 +166,14 @@ bool Config::checkConfig() const
 bool Config::ElevateNow()
 {
   bool isAdmin = false;
-  try {
-    isAdmin = isRunAsAdmin();
-  } catch (...) {
+  try { isAdmin = isRunAsAdmin(); } catch (...) {
     MessageBox(nullptr, L"", L"", NULL);
     return false;
   }
 
   if (!isAdmin) {
     WCHAR szPath[MAX_PATH];
-    if (GetModuleFileName(NULL, szPath, ARRAYSIZE(szPath))) {
+    if (GetModuleFileName(nullptr, szPath, ARRAYSIZE(szPath))) {
       SHELLEXECUTEINFO sei = { sizeof(sei) };
       sei.lpVerb = L"runas";// 操作，runas表示以管理员权限运行
       sei.lpFile = szPath;// 要运行的程序
@@ -119,9 +183,8 @@ bool Config::ElevateNow()
       if (!ShellExecuteEx(&sei)) {
         MessageBox(nullptr, L"软件提升管理员权限失败，请右键属性自行勾选管理员权限。", L"错误", NULL);
         return false;
-      } else {
-        exit(0);
       }
+      exit(0);
     }
   }
   return true;
@@ -162,5 +225,3 @@ fs::path Config::find_config_filepath()
   } catch (...) {}
   return {};
 }
-
-// 修改参数

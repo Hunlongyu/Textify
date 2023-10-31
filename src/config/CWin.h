@@ -30,6 +30,8 @@ public:
 
   static void hide();
 
+  static void restartApp();
+
   static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
 private:

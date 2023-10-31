@@ -37,6 +37,7 @@ public:
     int maxWidth{ 800 };
     HotKey hotkey;
     std::vector<Btn> list;
+    std::vector<std::wstring> exclude;
   };
 
   ConfigData m_config;
@@ -47,9 +48,12 @@ public:
   bool load();
   bool save();
 
+  bool change(const std::string &key, const bool &value);
+
 private:
   static Config *instance_;
   static std::mutex mutex_;
+  fs::path configJsonPath_;
 
   Config();
   ~Config();

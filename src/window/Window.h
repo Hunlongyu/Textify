@@ -75,9 +75,6 @@ private:
   // std::string转std::wstring
   static std::wstring StringToWString(const std::string &str);
 
-  // 打开浏览器翻译输入框内容
-  void openBrowserTranslate(const Config::Btn &btn) const;
-
-  // 打开浏览器搜索输入框内容
-  void openBrowserSearch(const Config::Btn &btn) const;
+  // 打开浏览器
+  void openBrowser(const Config::Btn &btn) const;
 };
