@@ -16,6 +16,9 @@ LRESULT CALLBACK mouseProc(int nCode, WPARAM wParam, LPARAM lParam);
 void setGlobalMouseHook(Window *win, Config *config);
 void unhookGlobalMouseHook();
 
+// 检查鼠标点击的程序是否是需要排除的
+bool checkExclude();
+
 // 检查配置文件里，有没有注册全局的鼠标快捷键
 bool checkConfigMouse(const std::string &str);
 
