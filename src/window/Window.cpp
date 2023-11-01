@@ -88,7 +88,7 @@ void Window::initWin()
   w = btnCount > 4 ? btnCount * 22 + 16 + ((btnCount - 1) * 4) : 116;
   h = btnCount > 1 ? 62 : 36;
 
-  hwnd_ = CreateWindowEx(WS_EX_TOPMOST,
+  hwnd_ = CreateWindowEx(WS_EX_TOOLWINDOW,
     wc_.lpszClassName,
     wc_.lpszClassName,
     WS_POPUP | WS_DLGFRAME,
@@ -104,6 +104,7 @@ void Window::initWin()
     MessageBox(nullptr, L"注册窗口类失败", L"系统提示", NULL);
     return;
   }
+  SetWindowPos(hwnd_, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
   SetWindowLongPtr(hwnd_, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 }
 

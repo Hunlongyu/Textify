@@ -24,4 +24,6 @@
 2. 高级设置说明文档
 
 ### 六、最后
-程序灵感来源于同名开源软件：https://github.com/m417z/Textify。感谢！
+程序灵感来源于同名开源软件：https://github.com/m417z/Textify
+
+感谢！
