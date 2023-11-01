@@ -48,8 +48,7 @@ LRESULT Window::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       }
       if (LOWORD(wParam) == ID_TRAY_SETTINGS) {
         const auto win = reinterpret_cast<Window *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
-        const HWND c_hwnd = win->cwin_.getHwnd();
-        if (c_hwnd) ShowWindow(c_hwnd, SW_SHOW);
+        win->cwin_.show();
         return 0;
       }
       if (LOWORD(wParam) == ID_TRAY_EXIT) {
@@ -113,10 +112,11 @@ void Window::initTray()
   nid_.cbSize = sizeof(NOTIFYICONDATA);
   nid_.uID = IDI_ICON1;
   nid_.hWnd = hwnd_;
-  nid_.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+  nid_.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP | NIF_INFO;
   nid_.uCallbackMessage = WM_SYSICON;
   nid_.hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_ICON1));
   wcscpy_s(nid_.szTip, L"Textify v1.0.0");
+  wcscpy_s(nid_.szInfo, L"Textify 已启动");
   Shell_NotifyIcon(NIM_ADD, &nid_);
 }
 

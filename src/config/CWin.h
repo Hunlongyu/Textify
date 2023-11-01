@@ -14,6 +14,9 @@
 #define ID_B_SAVE 108
 #define ID_B_CANCEL 109
 #define ID_B_DIY 110
+#define ID_GITHUB 111
+#define ID_VERSION 112
+
 
 class CWin
 {

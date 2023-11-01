@@ -163,6 +163,9 @@
   <ItemGroup>
     <Image Include="assets\logo.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\shortcut.vbs" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

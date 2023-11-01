@@ -7,6 +7,18 @@
 
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+  HANDLE hMutex;
+  try {
+    hMutex = OpenMutex(MUTEX_ALL_ACCESS, FALSE, L"Textify.exe");
+    if (hMutex != nullptr) {
+      MessageBox(nullptr, L"应用程序已经在运行!", L"提示", MB_OK);
+      return 0;
+    }
+    hMutex = CreateMutex(nullptr, FALSE, L"Textify.exe");
+  } catch (...) {
+    return 0;
+  }
+
 #ifdef _DEBUG
   if (AllocConsole()) {
     FILE *stream;
@@ -31,5 +43,10 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
   MouseHook::unhookGlobalMouseHook();
   KeybdHook::unhookGlobalKeybdHook();
+
+  if (hMutex) {
+    CloseHandle(hMutex);
+    hMutex = nullptr;
+  }
   return 0;
 }

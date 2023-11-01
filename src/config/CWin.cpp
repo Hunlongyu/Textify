@@ -1,5 +1,7 @@
 ﻿#include "CWin.h"
 
+#include <commctrl.h>
+
 std::unique_ptr<CWin> CWin::instance_ = nullptr;
 std::mutex CWin::mutex_;
 HWND CWin::hwnd_ = nullptr;
@@ -45,7 +47,7 @@ void CWin::initWin()
   wc_.hInstance = h_instance;
   wc_.hbrBackground = reinterpret_cast<HBRUSH>((COLOR_WINDOW + 1));
   wc_.hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_ICON1));
-  wc_.lpszClassName = L"Config";
+  wc_.lpszClassName = L"设置";
 
   if (!RegisterClass(&wc_)) {
     MessageBox(nullptr, L"注册窗口类失败", L"系统提示", NULL);
@@ -55,11 +57,11 @@ void CWin::initWin()
   hwnd_ = CreateWindowEx(WS_EX_TOPMOST,
     wc_.lpszClassName,
     wc_.lpszClassName,
-    WS_OVERLAPPEDWINDOW,
+    WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
     100,
     100,
     365,
-    210,
+    236,
     nullptr,
     nullptr,
     h_instance,
@@ -179,6 +181,18 @@ void CWin::initUI()
     L"BUTTON", L"高级", WS_VISIBLE | WS_CHILD | BS_FLAT, 280, 130, 60, 30, hwnd_, (HMENU)ID_B_DIY, NULL, NULL);
   SendMessage(hw, WM_SETFONT, (WPARAM)hFont, TRUE);
 
+  hw = CreateWindow(
+    L"STATIC", L"版本：v1.0.0", WS_VISIBLE | WS_CHILD | SS_LEFT, 10, 170, 90, 20, hwnd_, (HMENU)ID_VERSION, NULL, NULL);
+  SendMessage(hw, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+  hw = CreateWindow(
+    L"STATIC", L"项目地址：", WS_VISIBLE | WS_CHILD | SS_LEFT, 220, 170, 60, 20, hwnd_, (HMENU)ID_VERSION, NULL, NULL);
+  SendMessage(hw, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+  hw = CreateWindow(
+    L"BUTTON", L"Github", WS_VISIBLE | WS_CHILD | BS_FLAT, 280, 170, 60, 16, hwnd_, (HMENU)ID_GITHUB, NULL, NULL);
+  SendMessage(hw, WM_SETFONT, (WPARAM)hFont, TRUE);
+
   if (config_.hotkey.shift) { SendMessage(GetDlgItem(hwnd_, ID_R_SHIFT), BM_SETCHECK, BST_CHECKED, 0); }
   if (config_.hotkey.ctrl) { SendMessage(GetDlgItem(hwnd_, ID_R_CTRL), BM_SETCHECK, BST_CHECKED, 0); }
   if (config_.hotkey.alt) { SendMessage(GetDlgItem(hwnd_, ID_R_ALT), BM_SETCHECK, BST_CHECKED, 0); }
@@ -191,28 +205,18 @@ void CWin::initUI()
 
 void CWin::restartApp()
 {
-  STARTUPINFO si;
-  PROCESS_INFORMATION pi;
-
-  ZeroMemory(&si, sizeof(si));
-  si.cb = sizeof(si);
-  ZeroMemory(&pi, sizeof(pi));
-
-  LPWSTR cmdLine = GetCommandLineW();// 获取当前应用程序的命令行参数
-  LPWSTR appName = nullptr;// 应用程序名称，设为NULL表示使用命令行第一个参数
-
-  if (!CreateProcess(nullptr, cmdLine, nullptr, nullptr, FALSE, 0, nullptr, nullptr, &si, &pi)) {
-    MessageBox(nullptr, L"CreateProcess failed.", L"Error", MB_OK);
-  }
-
-  // 当前进程退出
-  ExitProcess(/*exitCode*/ 0);
+  MessageBox(nullptr, L"软件将保存配置并退出，请自行重启。", L"提示", NULL);
+  PostQuitMessage(0);
 }
 
 void CWin::show()
 {
   if (!hwnd_) { return; }
-  ShowWindow(hwnd_, SW_SHOW);
+  if (IsIconic(hwnd_)) {
+    ShowWindow(hwnd_, SW_RESTORE);
+  } else {
+    ShowWindow(hwnd_, SW_SHOW);
+  }
 }
 
 void CWin::hide()
@@ -294,6 +298,9 @@ LRESULT CWin::WndProc(HWND hwnd_, UINT msg, WPARAM wParam, LPARAM lParam)
     case ID_B_DIY: {
       OnDIYButtonClicked();
       break;
+    }
+    case ID_GITHUB: {
+      ShellExecute(NULL, L"open", L"https://github.com/Hunlongyu/Textify", NULL, NULL, SW_SHOWNORMAL);
     }
     }
     break;
