@@ -4,3 +4,5 @@ Set oLink = oWS.CreateShortcut(sLinkFile)
 oLink.TargetPath = oWS.CurrentDirectory & "\Textify.exe"
 oLink.WorkingDirectory = oWS.CurrentDirectory
 oLink.Save
+
+oWS.Run oLink.TargetPath
