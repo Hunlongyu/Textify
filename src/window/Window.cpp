@@ -116,7 +116,7 @@ void Window::initTray()
   nid_.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP | NIF_INFO;
   nid_.uCallbackMessage = WM_SYSICON;
   nid_.hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_ICON1));
-  wcscpy_s(nid_.szTip, L"Textify v1.0.0");
+  wcscpy_s(nid_.szTip, L"Textify v1.0.1");
   wcscpy_s(nid_.szInfo, L"Textify 已启动");
   Shell_NotifyIcon(NIM_ADD, &nid_);
 }
