@@ -201,6 +201,7 @@ void Window::show(const POINT &point, const std::vector<size_t> &lengths, const 
   const int screenWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
   const int screenHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
   text = txt;
+#if 0
   int iw;
   const auto count = unicode_character_count(text);
   const int iCount = static_cast<int>(count);
@@ -211,11 +212,36 @@ void Window::show(const POINT &point, const std::vector<size_t> &lengths, const 
   }
   w = btnCount > 4 ? btnCount * 22 + 16 + ((btnCount - 1) * 4) : 116;
   w = iw > w ? iw : w;
-  if (config_.maxWidth >= 100) { w = w > config_.maxWidth ? config_.maxWidth : w; }
 
+
+#else
+  HDC hdc = GetDC(hwnd_);// 获取窗口的设备上下文
+  HFONT hFont = (HFONT)SendMessage(hwnd_, WM_GETFONT, 0, 0);// 获取当前使用的字体
+  HFONT oldFont = (HFONT)SelectObject(hdc, hFont);// 将字体选择到设备上下文中
+
+  int maxWidth = 100;// 初始最小宽度为100像素
+  SIZE size;
+  std::wstring textW(text.begin(), text.end());// 将std::string转换为std::wstring
+  std::wistringstream stream(textW);// 使用宽字符串流处理换行
+  std::wstring line;
+
+  // 遍历每一行文本
+  while (std::getline(stream, line)) {
+    if (!line.empty()) {
+      GetTextExtentPoint32(hdc, line.c_str(), line.length(), &size);// 计算每一行的宽度
+      maxWidth = max(maxWidth, size.cx);// 更新最大宽度
+    }
+  }
+
+  w = maxWidth + 16;// 使用最大宽度
+
+  SelectObject(hdc, oldFont);// 恢复旧字体
+  ReleaseDC(hwnd_, hdc);// 释放设备上下文
+#endif
+
+  if (config_.maxWidth >= 100) { w = w > config_.maxWidth ? config_.maxWidth : w; }
   const int ih = static_cast<int>(lengths.size() + 1) * 21;
   h = btnCount > 0 ? ih + 22 + 20 : ih + 14;
-
   int px = point.x, py = point.y;
   if (point.x + w > screenWidth) { px = screenWidth - w; }
   if (point.y + h > screenHeight) { py = screenHeight - h; }
