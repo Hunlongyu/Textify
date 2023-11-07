@@ -57,7 +57,7 @@ private:
   std::wstring text;// 识别到的文字
 
   // 获取文字个数
-  static size_t unicode_character_count(const std::wstring &str);
+  int unicode_character_width(const std::wstring &str);
 
   // 解析按钮事件
   void parseBtnHandle(int) const;

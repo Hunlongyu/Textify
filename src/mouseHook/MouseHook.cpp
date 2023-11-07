@@ -76,21 +76,17 @@ bool MouseHook::checkExclude()
 {
   POINT point;
   GetCursorPos(&point);
-
   const auto excludeList = Config::Instance().m_config.exclude;
-
   const auto hwnd_ = WindowFromPoint(point);
   // 获取窗口的进程ID
   DWORD processId;
   GetWindowThreadProcessId(hwnd_, &processId);
-
   // 获取进程句柄
   const HANDLE processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId);
   if (processHandle == NULL) {
     // 处理无法打开进程的情况
     return false;
   }
-
   // 获取进程可执行文件路径
   TCHAR executablePath[MAX_PATH];
   if (GetModuleFileNameEx(processHandle, nullptr, executablePath, MAX_PATH) == 0) {
@@ -98,28 +94,21 @@ bool MouseHook::checkExclude()
     CloseHandle(processHandle);
     return false;
   }
-
   // 关闭进程句柄
   CloseHandle(processHandle);
-
   // 将可执行文件路径转换为小写以进行比较
   std::wstring lowercaseExecutablePath = executablePath;
-
-  std::wcout << "lowercaseExcludedApp: " << lowercaseExecutablePath << std::endl;
   std::transform(
     lowercaseExecutablePath.begin(), lowercaseExecutablePath.end(), lowercaseExecutablePath.begin(), ::tolower);
-
   // 检查可执行文件路径是否在排除列表中
   for (const auto &excludedApp : excludeList) {
     std::wstring lowercaseExcludedApp = excludedApp;
     std::transform(lowercaseExcludedApp.begin(), lowercaseExcludedApp.end(), lowercaseExcludedApp.begin(), ::tolower);
-
     if (lowercaseExecutablePath.find(lowercaseExcludedApp) != std::wstring::npos) {
       // 可执行文件路径在排除列表中
       return true;
     }
   }
-
   // 可执行文件路径不在排除列表中
   return false;
 }
