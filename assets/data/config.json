@@ -3,8 +3,8 @@
   "autoStartup": false,
   "checkForUpdate": false,
   "exclude": [
-    "nekoray",
-    "GitHubDesktop.exe"
+    "WeChat.exe",
+    "WXWork.exe"
   ],
   "hotkey": {
     "alt": false,
