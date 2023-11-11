@@ -182,7 +182,17 @@ void CWin::initUI()
   SendMessage(hw, WM_SETFONT, (WPARAM)hFont, TRUE);
 
   hw = CreateWindow(
-    L"STATIC", L"版本：v1.0.1", WS_VISIBLE | WS_CHILD | SS_LEFT, 10, 170, 90, 20, hwnd_, (HMENU)ID_VERSION, NULL, NULL);
+    L"STATIC",
+    L"版本：v1.0.2",
+    WS_VISIBLE | WS_CHILD | SS_LEFT,
+    10,
+    170,
+    90,
+    20,
+    hwnd_,
+    (HMENU)ID_VERSION,
+    NULL,
+    NULL);
   SendMessage(hw, WM_SETFONT, (WPARAM)hFont, TRUE);
 
   hw = CreateWindow(
