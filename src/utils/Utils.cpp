@@ -1,104 +1,160 @@
-﻿#include "Utils.h"
+#include "utils.h"
 
-#include <iostream>
+#include <UIAutomation.h>
+#include <memory>
+#include <oleacc.h>
+#include <windows.h>
+#include <wrl/client.h>
 
-void utils::getTextFromPointByUIA(POINT pt, std::wstring &outStr, std::vector<size_t> &outLengths)
+using Microsoft::WRL::ComPtr;
+
+namespace utils
 {
-  outStr.clear();
-  outLengths = std::vector<size_t>();
-
-  HRESULT hr;
-  CComPtr<IUIAutomation> uia;
-  hr = uia.CoCreateInstance(CLSID_CUIAutomation);
-  if (FAILED(hr) || !uia) { return; }
-
-  CComPtr<IUIAutomationElement> element;
-  hr = uia->ElementFromPoint(pt, &element);
-  if (FAILED(hr) || !element) { return; }
-
-  element.Release();
-  hr = uia->ElementFromPoint(pt, &element);
-  if (FAILED(hr) || !element) { return; }
-
-  CComPtr<IUIAutomationCondition> trueCondition;
-  hr = uia->CreateTrueCondition(&trueCondition);
-  if (FAILED(hr) || !trueCondition) return;
-
-  CComPtr<IUIAutomationTreeWalker> treeWalker;
-  hr = uia->CreateTreeWalker(trueCondition, &treeWalker);
-  if (FAILED(hr) || !treeWalker) return;
-
-  int processId = 0;
-  hr = element->get_CurrentProcessId(&processId);
-  if (FAILED(hr)) return;
-
-  constexpr int maxDepth{ 5 };
-  int depth{ 0 };
-  while (true) {
-    if (depth > maxDepth) { break; }
-    std::wstring txt;
-    std::vector<size_t> lengths;
-
-    BSTR bsName;
-    hr = element->get_CurrentName(&bsName);
-    if (SUCCEEDED(hr) && bsName != nullptr) { processingText(txt, bsName, lengths); }
-
-    VARIANT value;
-    hr = element->GetCurrentPropertyValue(UIA_ValueValuePropertyId, &value);
-    if (SUCCEEDED(hr) && value.vt == VT_BSTR && value.bstrVal) {
-      if (!AreBSTREqual(bsName, value.bstrVal)) { processingText(txt, value.bstrVal, lengths); }
+POINT getMousePosition()
+{
+    POINT pt;
+    if (!GetCursorPos(&pt))
+    {
+        return {0, 0};
     }
 
-    SysFreeString(bsName);
-    VariantClear(&value);
+    // 方式A：优先使用窗口 DPI（最准确，Win10 1607+）
+    const HWND hwnd = WindowFromPoint(pt);
+    if (hwnd)
+    {
+        UINT dpi = GetDpiForWindow(hwnd); // 需要 manifest 设置 dpiAware=true/pm
+        if (dpi != 0 && dpi != USER_DEFAULT_SCREEN_DPI)
+        {
+            pt.x = MulDiv(pt.x, dpi, USER_DEFAULT_SCREEN_DPI);
+            pt.y = MulDiv(pt.y, dpi, USER_DEFAULT_SCREEN_DPI);
+        }
+    }
+    else
+    {
+        // 方式B：降级使用系统 DPI（老系统兼容）
+        UINT dpi = GetDpiForSystem();
+        if (dpi != 0 && dpi != USER_DEFAULT_SCREEN_DPI)
+        {
+            pt.x = MulDiv(pt.x, dpi, USER_DEFAULT_SCREEN_DPI);
+            pt.y = MulDiv(pt.y, dpi, USER_DEFAULT_SCREEN_DPI);
+        }
+    }
+    return {pt.x, pt.y};
+}
 
-    if (!txt.empty()) {
-      outStr = txt;
-      outLengths = lengths;
-      break;
+std::wstring getTextByUIA(const POINT pos)
+{
+    // 1. 初始化 COM（使用 RAII 自动 CoUninitialize）
+    auto com_guard =
+        std::unique_ptr<void, void (*)(void *)>(reinterpret_cast<void *>(1), [](void *) {
+            CoUninitialize();
+        });
+
+    // 2. 创建 UIA 主接口
+    ComPtr<IUIAutomation> automation;
+    HRESULT               hr = CoCreateInstance(
+        __uuidof(CUIAutomation8),
+        nullptr,
+        CLSCTX_INPROC_SERVER,
+        __uuidof(IUIAutomation),
+        (void **)&automation
+    );
+    if (FAILED(hr) || !automation)
+        return {};
+
+    // 3. 直接从鼠标位置获取元素（最快）
+    ComPtr<IUIAutomationElement> element;
+    hr = automation->ElementFromPoint(pos, &element);
+    if (FAILED(hr) || !element)
+        return {};
+
+    // 4. 优雅提取文本的 lambda（支持多种 Pattern）
+    const auto tryGetText = [&](auto getTextFunc) -> std::wstring {
+        BSTR bStr = nullptr;
+        if (SUCCEEDED(getTextFunc(&bStr)) && bStr && SysStringLen(bStr) > 0)
+        {
+            std::wstring result(bStr, SysStringLen(bStr));
+            SysFreeString(bStr);
+            return result;
+        }
+        if (bStr)
+            SysFreeString(bStr);
+        return {};
+    };
+
+    // 5. 按优先级尝试多种方式获取文本
+
+    // 方式1：Name 属性（最常见）
+    std::wstring text = tryGetText([&](BSTR *p) {
+        return element->get_CurrentName(p);
+    });
+    if (!text.empty())
+    {
+        return text;
     }
 
-    CComPtr<IUIAutomationElement> parentElement;
-    hr = treeWalker->GetParentElement(element, &parentElement);
-    if (FAILED(hr) || !parentElement) break;
+    // 方式2：ValuePattern（输入框）
+    {
+        ComPtr<IUIAutomationValuePattern> valuePattern;
+        if (SUCCEEDED(element->GetCurrentPatternAs(
+                UIA_ValuePatternId, __uuidof(IUIAutomationValuePattern), (void **)&valuePattern
+            )) &&
+            valuePattern)
+        {
+            text = tryGetText([&](BSTR *p) {
+                return valuePattern->get_CurrentValue(p);
+            });
+            if (!text.empty())
+                return text;
+        }
+    }
 
-    int compareProcessId = 0;
-    hr = parentElement->get_CurrentProcessId(&compareProcessId);
-    if (FAILED(hr) || compareProcessId != processId) break;
+    // 方式3：TextPattern（富文本）
+    {
+        ComPtr<IUIAutomationTextPattern> textPattern;
+        if (SUCCEEDED(element->GetCurrentPatternAs(
+                UIA_TextPatternId, __uuidof(IUIAutomationTextPattern), (void **)&textPattern
+            )) &&
+            textPattern)
+        {
 
-    depth++;
-    element.Attach(parentElement.Detach());
-  }
+            ComPtr<IUIAutomationTextRange> range;
+            if (SUCCEEDED(textPattern->get_DocumentRange(&range)) && range)
+            {
+                text = tryGetText([&](BSTR *p) {
+                    return range->GetText(-1, p);
+                });
+                if (!text.empty())
+                    return text;
+            }
+        }
+    }
+
+    // 方式4：LegacyIAccessiblePattern（兼容古老控件）
+    {
+        ComPtr<IUIAutomationLegacyIAccessiblePattern> legacy;
+        if (SUCCEEDED(element->GetCurrentPatternAs(
+                UIA_LegacyIAccessiblePatternId,
+                __uuidof(IUIAutomationLegacyIAccessiblePattern),
+                (void **)&legacy
+            )) &&
+            legacy)
+        {
+            text = tryGetText([&](BSTR *p) {
+                return legacy->get_CurrentName(p);
+            });
+            if (!text.empty())
+            {
+                return text;
+            }
+        }
+    }
+
+    return {}; // 全部失败
 }
 
-bool utils::AreBSTREqual(const BSTR &b1, const BSTR &b2)
+std::wstring getTextByMSAA(POINT pos)
 {
-  UINT len1 = SysStringLen(b1);
-  UINT len2 = SysStringLen(b2);
-
-  if (len1 != len2) return false;// 长度不相等，字符串肯定不相等
-
-  // 使用内存比较函数比较字符串内容
-  return memcmp(b1, b2, len1 * sizeof(OLECHAR)) == 0;
+    return {};
 }
-
-void utils::processingText(std::wstring &txt, const std::wstring &str, std::vector<size_t> &lengthList)
-{
-  if (str.empty()) return;
-
-  std::wstring append = str;
-  std::wstring::size_type pos = 0;
-  while ((pos = append.find(L"\r\n", pos)) != std::wstring::npos) {
-    append.replace(pos, 2, L" ");
-    pos += 1;
-  }
-  std::ranges::replace(append, L'\r', L' ');
-  std::ranges::replace(append, L'\n', L' ');
-
-  if (!txt.empty()) {
-    txt += L"\r\n";
-    lengthList.push_back(txt.length());
-  }
-
-  txt += append;
-}
+} // namespace utils
