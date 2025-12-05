@@ -1,7 +1,12 @@
 #pragma once
 
 #include <Window.h>
+#include <atomic>
+#include <condition_variable>
 #include <functional>
+#include <mutex>
+#include <queue>
+#include <thread>
 
 class MouseHook
 {
@@ -44,7 +49,20 @@ class MouseHook
 
     static std::atomic_bool s_pressed;
 
+    // 工作线程相关
+    std::thread                       m_worker_thread;
+    std::atomic_bool                  m_worker_running{false};
+    std::queue<std::function<void()>> m_tasks;
+    std::mutex                        m_queue_mutex;
+    std::condition_variable           m_queue_cv;
+
+    // 防止重入
+    std::atomic_bool m_task_executing{false};
+
     static LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam);
 
     bool check_exclude_exe() const;
+
+    void worker_thread_func();
+    void post_task(std::function<void()> task);
 };

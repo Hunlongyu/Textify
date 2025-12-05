@@ -3,29 +3,32 @@
 #include "../../utils/utils.h"
 #include "config/config.h"
 
-#include <iostream>
+#include <dwmapi.h>
+#include <future>
 
 Home::Home()
 {
     init_ui();
     init_icons();
     init_connect();
+    enable_window_shadow();
 }
 
 Home::~Home() = default;
 
 void Home::init_ui()
 {
-    Borderless       = true;
-    IsLayered        = true;
-    Opacity          = config::get_or<float>("window/opacity", 1);
-    IsHitTestVisible = true;
-    StartupLocation  = sw::WindowStartupLocation::CenterScreen;
+    ToolWindow = true;
+    Borderless = true;
+    IsLayered  = true;
+    Opacity    = config::get_or<float>("window/opacity", 0.97f);
+    Visible    = false;
 
-    Width    = 120;
-    Height   = 60;
-    MinWidth = 120;
-    MaxWidth = config::get_or<int>("window/max-width", 800);
+    Width     = 120;
+    Height    = 60;
+    MinWidth  = 120;
+    MaxWidth  = config::get_or<int>("window/max-width", 800);
+    BackColor = sw::Color{44, 44, 44};
     SetLayout<sw::FillLayout>();
 
     m_grid.SetRows({sw::AutoSizeGridRow{}, sw::AutoSizeGridRow{}});
@@ -33,9 +36,13 @@ void Home::init_ui()
     m_grid.HorizontalAlignment = sw::HorizontalAlignment::Stretch;
     m_grid.VerticalAlignment   = sw::VerticalAlignment::Stretch;
     m_grid.IsHitTestVisible    = false;
-    m_grid.Margin              = sw::Thickness{4, 4, 4, 4};
+    m_grid.Margin              = sw::Thickness{6, 8, 6, 4};
 
     m_textBox.HorizontalAlignment = sw::HorizontalAlignment::Stretch;
+    m_textBox.BackColor           = sw::Color{56, 56, 56};
+    m_textBox.TextColor           = sw::Color{243, 243, 243};
+    m_textBox.FontSize            = 13.f;
+    m_textBox.SetExtendedStyle(WS_EX_CLIENTEDGE, false);
     m_grid.AddChild(m_textBox, sw::GridLayoutTag{0, 0});
 
     m_iconBar.Orientation         = sw::Orientation::Horizontal;
@@ -54,11 +61,41 @@ void Home::init_icons()
 
 void Home::init_connect()
 {
-    MouseHook::instance().install([]() {
-        const auto pt   = utils::getMousePosition();
-        std::wcout << L"Mouse: " << pt.x << L", " << pt.y << std::endl;
-        const auto wStr = utils::getTextByUIA(pt);
-        std::wcout << L"Text: " << wStr << std::endl;
+    MouseHook::instance().install([this]() {
+        auto        &utils = Utils::getInstance();
+        std::wstring txt;
+        const auto   uia_txt = utils.getTextByUIA();
+        if (!uia_txt.empty())
+        {
+            txt = uia_txt;
+        }
+        else
+        {
+            const auto mass_txt = utils.getTextByMSAA();
+            if (!mass_txt.empty())
+            {
+                txt = mass_txt;
+            }
+        }
+        if (!txt.empty())
+        {
+            Invoke([this, &txt]() {
+                m_textBox.Text = txt;
+                update_text_width();
+                Show();
+
+                ::SetForegroundWindow(Handle);
+                ::BringWindowToTop(Handle);
+                ::SetFocus(Handle);
+
+                POINT pt;
+                if (::GetCursorPos(&pt))
+                {
+                    Left = pt.x;
+                    Top  = pt.y + 20;
+                }
+            });
+        }
     });
 
     AddHandler<sw::KeyDownEventArgs>([this](sw::UIElement &sender, sw::KeyDownEventArgs &e) {
@@ -69,14 +106,32 @@ void Home::init_connect()
             e.handledMsg = true;
         }
     });
+
+    m_textBox
+        .AddHandler(sw::UIElement_LostFocus, [this](sw::UIElement &sender, sw::RoutedEventArgs &e) {
+            Visible = false;
+        });
+}
+
+void Home::enable_window_shadow()
+{
+    DWMNCRENDERINGPOLICY policy = DWMNCRP_ENABLED;
+    DwmSetWindowAttribute(Handle, DWMWA_NCRENDERING_POLICY, &policy, sizeof(policy));
+
+    // 允许非客户端区域绘制
+    BOOL allowNCPaint = TRUE;
+    DwmSetWindowAttribute(Handle, DWMWA_ALLOW_NCPAINT, &allowNCPaint, sizeof(allowNCPaint));
+
+    // 扩展窗口边框以包含阴影
+    MARGINS margins = {1}; // -1 表示整个窗口都有玻璃效果
+    DwmExtendFrameIntoClientArea(Handle, &margins);
 }
 
 void Home::update_text_width()
 {
-    std::wstring text = m_textBox.Text;
+    const std::wstring text = m_textBox.Text;
     if (text.empty())
     {
-        m_textBox.Width = 60;
         return;
     }
 
@@ -95,11 +150,10 @@ void Home::update_text_width()
     ::SelectObject(hdc, old);
     ::ReleaseDC(hwnd, hdc);
 
-    double wDip     = sw::Dip::PxToDipX(rc.right - rc.left);
-    double padding  = 12.0;
-    double maxDip   = static_cast<double>(MaxWidth);
-    double finalW   = std::clamp(wDip + padding, 60.0, maxDip);
-    m_textBox.Width = finalW;
+    double wDip    = sw::Dip::PxToDipX(rc.right - rc.left);
+    double padding = 12.0;
+    double finalW  = std::clamp(wDip + padding + 10, MinWidth.Get(), MaxWidth.Get());
+    Width          = finalW;
 }
 
 void Home::populate_icons(const std::vector<std::wstring> &icon_paths, int square_size)
@@ -147,4 +201,22 @@ void Home::OnNcHitTest(const sw::Point &testPoint, sw::HitTestResult &result)
     }
 
     result = sw::HitTestResult::HitCaption;
+}
+
+bool Home::OnKillFocus(HWND hNextFocus)
+{
+    bool isChildren = false;
+    QueryAllChildren([this, hNextFocus, &isChildren](const sw::UIElement *cd) {
+        if (cd->Handle == hNextFocus)
+        {
+            isChildren = true;
+            return false;
+        }
+        return true;
+    });
+    if (!isChildren)
+    {
+        Visible = false;
+    }
+    return Window::OnKillFocus(hNextFocus);
 }

@@ -7,6 +7,6 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int)
 #endif
 {
     const auto win = std::make_unique<Home>();
-    win->Show();
+    win->Visible   = false;
     return sw::App::MsgLoop();
 }

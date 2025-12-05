@@ -1,160 +1,238 @@
-#include "utils.h"
-
+#include "Utils.h"
 #include <UIAutomation.h>
-#include <memory>
 #include <oleacc.h>
-#include <windows.h>
-#include <wrl/client.h>
+#include <atlbase.h>
+#include <Windows.h>
 
 using Microsoft::WRL::ComPtr;
 
-namespace utils
+Utils& Utils::getInstance() noexcept
 {
-POINT getMousePosition()
+    static Utils instance;
+    return instance;
+}
+
+std::wstring Utils::getTextByUIA()
 {
     POINT pt;
-    if (!GetCursorPos(&pt))
-    {
-        return {0, 0};
-    }
+    if (!::GetCursorPos(&pt))
+        return {};
 
-    // 方式A：优先使用窗口 DPI（最准确，Win10 1607+）
-    const HWND hwnd = WindowFromPoint(pt);
-    if (hwnd)
-    {
-        UINT dpi = GetDpiForWindow(hwnd); // 需要 manifest 设置 dpiAware=true/pm
-        if (dpi != 0 && dpi != USER_DEFAULT_SCREEN_DPI)
-        {
-            pt.x = MulDiv(pt.x, dpi, USER_DEFAULT_SCREEN_DPI);
-            pt.y = MulDiv(pt.y, dpi, USER_DEFAULT_SCREEN_DPI);
-        }
-    }
-    else
-    {
-        // 方式B：降级使用系统 DPI（老系统兼容）
-        UINT dpi = GetDpiForSystem();
-        if (dpi != 0 && dpi != USER_DEFAULT_SCREEN_DPI)
-        {
-            pt.x = MulDiv(pt.x, dpi, USER_DEFAULT_SCREEN_DPI);
-            pt.y = MulDiv(pt.y, dpi, USER_DEFAULT_SCREEN_DPI);
-        }
-    }
-    return {pt.x, pt.y};
+    auto result = getAccessibleInfoFromPointUIA(pt);
+    return result.value_or(L"");
 }
 
-std::wstring getTextByUIA(const POINT pos)
+std::wstring Utils::getTextByMSAA()
 {
-    // 1. 初始化 COM（使用 RAII 自动 CoUninitialize）
-    auto com_guard =
-        std::unique_ptr<void, void (*)(void *)>(reinterpret_cast<void *>(1), [](void *) {
-            CoUninitialize();
-        });
+    POINT pt;
+    if (!::GetCursorPos(&pt))
+        return {};
 
-    // 2. 创建 UIA 主接口
-    ComPtr<IUIAutomation> automation;
-    HRESULT               hr = CoCreateInstance(
-        __uuidof(CUIAutomation8),
+    auto result = getAccessibleInfoFromPointMSAA(pt);
+    return result.value_or(L"");
+}
+
+std::optional<std::wstring> Utils::getAccessibleInfoFromPointUIA(POINT pt)
+{
+    ComPtr<IUIAutomation> uia;
+    HRESULT hr = ::CoCreateInstance(
+        CLSID_CUIAutomation,
         nullptr,
         CLSCTX_INPROC_SERVER,
-        __uuidof(IUIAutomation),
-        (void **)&automation
+        IID_PPV_ARGS(&uia)
     );
-    if (FAILED(hr) || !automation)
-        return {};
+    
+    if (FAILED(hr) || !uia)
+        return std::nullopt;
 
-    // 3. 直接从鼠标位置获取元素（最快）
     ComPtr<IUIAutomationElement> element;
-    hr = automation->ElementFromPoint(pos, &element);
+    hr = uia->ElementFromPoint(pt, &element);
     if (FAILED(hr) || !element)
-        return {};
+        return L"";
 
-    // 4. 优雅提取文本的 lambda（支持多种 Pattern）
-    const auto tryGetText = [&](auto getTextFunc) -> std::wstring {
-        BSTR bStr = nullptr;
-        if (SUCCEEDED(getTextFunc(&bStr)) && bStr && SysStringLen(bStr) > 0)
-        {
-            std::wstring result(bStr, SysStringLen(bStr));
-            SysFreeString(bStr);
-            return result;
-        }
-        if (bStr)
-            SysFreeString(bStr);
-        return {};
-    };
+    // Chromium 的 bug 修复：需要第二次查询
+    element.Reset();
+    hr = uia->ElementFromPoint(pt, &element);
+    if (FAILED(hr) || !element)
+        return L"";
 
-    // 5. 按优先级尝试多种方式获取文本
+    ComPtr<IUIAutomationCondition> trueCondition;
+    hr = uia->CreateTrueCondition(&trueCondition);
+    if (FAILED(hr) || !trueCondition)
+        return L"";
 
-    // 方式1：Name 属性（最常见）
-    std::wstring text = tryGetText([&](BSTR *p) {
-        return element->get_CurrentName(p);
-    });
-    if (!text.empty())
+    ComPtr<IUIAutomationTreeWalker> treeWalker;
+    hr = uia->CreateTreeWalker(trueCondition.Get(), &treeWalker);
+    if (FAILED(hr) || !treeWalker)
+        return L"";
+
+    int processId = 0;
+    hr = element->get_CurrentProcessId(&processId);
+    if (FAILED(hr))
+        return L"";
+
+    // 遍历元素树查找文本
+    int depth = 0;
+    const int MAX_DEPTH = 10;
+    
+    while (element && depth < MAX_DEPTH)
     {
-        return text;
+        std::wstring text = extractTextFromUIAElement(element.Get());
+        if (!text.empty())
+            return text;
+
+        ComPtr<IUIAutomationElement> parentElement;
+        hr = treeWalker->GetParentElement(element.Get(), &parentElement);
+        if (FAILED(hr) || !parentElement)
+            break;
+
+        int compareProcessId = 0;
+        hr = parentElement->get_CurrentProcessId(&compareProcessId);
+        if (FAILED(hr) || compareProcessId != processId)
+            break;
+
+        element = std::move(parentElement);
+        depth++;
     }
 
-    // 方式2：ValuePattern（输入框）
-    {
-        ComPtr<IUIAutomationValuePattern> valuePattern;
-        if (SUCCEEDED(element->GetCurrentPatternAs(
-                UIA_ValuePatternId, __uuidof(IUIAutomationValuePattern), (void **)&valuePattern
-            )) &&
-            valuePattern)
-        {
-            text = tryGetText([&](BSTR *p) {
-                return valuePattern->get_CurrentValue(p);
-            });
-            if (!text.empty())
-                return text;
-        }
-    }
-
-    // 方式3：TextPattern（富文本）
-    {
-        ComPtr<IUIAutomationTextPattern> textPattern;
-        if (SUCCEEDED(element->GetCurrentPatternAs(
-                UIA_TextPatternId, __uuidof(IUIAutomationTextPattern), (void **)&textPattern
-            )) &&
-            textPattern)
-        {
-
-            ComPtr<IUIAutomationTextRange> range;
-            if (SUCCEEDED(textPattern->get_DocumentRange(&range)) && range)
-            {
-                text = tryGetText([&](BSTR *p) {
-                    return range->GetText(-1, p);
-                });
-                if (!text.empty())
-                    return text;
-            }
-        }
-    }
-
-    // 方式4：LegacyIAccessiblePattern（兼容古老控件）
-    {
-        ComPtr<IUIAutomationLegacyIAccessiblePattern> legacy;
-        if (SUCCEEDED(element->GetCurrentPatternAs(
-                UIA_LegacyIAccessiblePatternId,
-                __uuidof(IUIAutomationLegacyIAccessiblePattern),
-                (void **)&legacy
-            )) &&
-            legacy)
-        {
-            text = tryGetText([&](BSTR *p) {
-                return legacy->get_CurrentName(p);
-            });
-            if (!text.empty())
-            {
-                return text;
-            }
-        }
-    }
-
-    return {}; // 全部失败
+    return L"";
 }
 
-std::wstring getTextByMSAA(POINT pos)
+std::optional<std::wstring> Utils::getAccessibleInfoFromPointMSAA(POINT pt)
 {
-    return {};
+    ComPtr<IAccessible> acc;
+    CComVariant childId;
+    
+    HRESULT hr = ::AccessibleObjectFromPoint(pt, &acc, &childId);
+    if (FAILED(hr) || !acc)
+        return std::nullopt;
+
+    // Chromium 的 bug 修复：需要第二次查询
+    acc.Reset();
+    childId.Clear();
+    hr = ::AccessibleObjectFromPoint(pt, &acc, &childId);
+    if (FAILED(hr) || !acc)
+        return std::nullopt;
+
+    HWND hWnd = nullptr;
+    hr = ::WindowFromAccessibleObject(acc.Get(), &hWnd);
+    if (FAILED(hr))
+        return L"";
+
+    DWORD processId = 0;
+    ::GetWindowThreadProcessId(hWnd, &processId);
+
+    // 遍历可访问对象树查找文本
+    int depth = 0;
+    const int MAX_DEPTH = 10;
+    
+    while (acc && depth < MAX_DEPTH)
+    {
+        std::wstring text = extractTextFromMSAAElement(acc.Get(), childId);
+        if (!text.empty())
+            return text;
+
+        if (childId.lVal == CHILDID_SELF)
+        {
+            ComPtr<IDispatch> dispParent;
+            hr = acc->get_accParent(&dispParent);
+            if (FAILED(hr) || !dispParent)
+                break;
+
+            ComPtr<IAccessible> accParent;
+            hr = dispParent.As(&accParent);
+            if (FAILED(hr))
+                break;
+
+            HWND parentHwnd = nullptr;
+            hr = ::WindowFromAccessibleObject(accParent.Get(), &parentHwnd);
+            if (FAILED(hr))
+                break;
+
+            DWORD compareProcessId = 0;
+            ::GetWindowThreadProcessId(parentHwnd, &compareProcessId);
+            if (compareProcessId != processId)
+                break;
+
+            acc = std::move(accParent);
+        }
+        else
+        {
+            childId.lVal = CHILDID_SELF;
+        }
+        depth++;
+    }
+
+    return L"";
 }
-} // namespace utils
+
+std::wstring Utils::extractTextFromUIAElement(IUIAutomationElement* element)
+{
+    if (!element)
+        return {};
+
+    std::wstring result;
+
+    // 获取名称
+    CComBSTR name;
+    if (SUCCEEDED(element->get_CurrentName(&name)) && name)
+    {
+        result += name.m_str;
+    }
+
+    // 获取值
+    CComVariant value;
+    if (SUCCEEDED(element->GetCurrentPropertyValue(UIA_ValueValuePropertyId, &value)) &&
+        value.vt == VT_BSTR && value.bstrVal)
+    {
+        if (name != value.bstrVal)
+        {
+            if (!result.empty())
+                result += L" ";
+            result += value.bstrVal;
+        }
+    }
+
+    return result;
+}
+
+std::wstring Utils::extractTextFromMSAAElement(IAccessible* acc, const VARIANT& childId)
+{
+    if (!acc)
+        return {};
+
+    std::wstring result;
+
+    // 获取名称
+    CComBSTR name;
+    if (SUCCEEDED(acc->get_accName(childId, &name)) && name)
+    {
+        result += name.m_str;
+    }
+
+    // 获取值
+    CComBSTR value;
+    if (SUCCEEDED(acc->get_accValue(childId, &value)) && value && value != name)
+    {
+        if (!result.empty())
+            result += L" ";
+        result += value.m_str;
+    }
+
+    // 获取描述(排除标题栏)
+    CComVariant role;
+    if (FAILED(acc->get_accRole(CComVariant(CHILDID_SELF), &role)) ||
+        role.lVal != ROLE_SYSTEM_TITLEBAR)
+    {
+        CComBSTR description;
+        if (SUCCEEDED(acc->get_accDescription(childId, &description)) &&
+            description && description != name && description != value)
+        {
+            if (!result.empty())
+                result += L" ";
+            result += description.m_str;
+        }
+    }
+
+    return result;
+}

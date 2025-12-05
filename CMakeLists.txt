@@ -56,4 +56,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     config
     ole32
     oleacc
+    dwmapi
 )

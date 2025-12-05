@@ -10,6 +10,7 @@ class Home : public sw::Window
 
   protected:
     void OnNcHitTest(const sw::Point &testPoint, sw::HitTestResult &result) override;
+    bool OnKillFocus(HWND hNextFocus) override;
 
   private:
     sw::Grid                                  m_grid;
@@ -23,6 +24,9 @@ class Home : public sw::Window
 
     void init_connect();
 
+    void enable_window_shadow();
+
     void update_text_width();
+
     void populate_icons(const std::vector<std::wstring> &icon_paths, int square_size = 48);
 };

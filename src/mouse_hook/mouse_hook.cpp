@@ -8,11 +8,24 @@ std::atomic<bool> MouseHook::s_pressed{false};
 MouseHook::MouseHook()
 {
     refresh_config();
+
+    // 启动工作线程
+    m_worker_running.store(true, std::memory_order_release);
+    m_worker_thread = std::thread(&MouseHook::worker_thread_func, this);
 }
 
 MouseHook::~MouseHook()
 {
     uninstall();
+
+    // 停止工作线程
+    m_worker_running.store(false, std::memory_order_release);
+    m_queue_cv.notify_all();
+
+    if (m_worker_thread.joinable())
+    {
+        m_worker_thread.join();
+    }
 }
 
 MouseHook &MouseHook::instance()
@@ -82,6 +95,57 @@ void MouseHook::set_enabled(const bool enabled) const noexcept
     }
 }
 
+void MouseHook::worker_thread_func()
+{
+    // 在工作线程中初始化 COM
+    HRESULT hr = ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    bool    com_initialized = SUCCEEDED(hr);
+
+    while (m_worker_running.load(std::memory_order_acquire))
+    {
+        std::function<void()> task;
+
+        {
+            std::unique_lock<std::mutex> lock(m_queue_mutex);
+            m_queue_cv.wait(lock, [this] {
+                return !m_tasks.empty() || !m_worker_running.load(std::memory_order_acquire);
+            });
+
+            if (!m_worker_running.load(std::memory_order_acquire))
+            {
+                break;
+            }
+
+            if (!m_tasks.empty())
+            {
+                task = std::move(m_tasks.front());
+                m_tasks.pop();
+            }
+        }
+
+        if (task)
+        {
+            m_task_executing.store(true, std::memory_order_release);
+            task();
+            m_task_executing.store(false, std::memory_order_release);
+        }
+    }
+
+    if (com_initialized)
+    {
+        ::CoUninitialize();
+    }
+}
+
+void MouseHook::post_task(std::function<void()> task)
+{
+    {
+        std::lock_guard<std::mutex> lock(m_queue_mutex);
+        m_tasks.push(std::move(task));
+    }
+    m_queue_cv.notify_one();
+}
+
 LRESULT CALLBACK
 MouseHook::LowLevelMouseProc(const int nCode, const WPARAM wParam, const LPARAM lParam)
 {
@@ -141,9 +205,19 @@ MouseHook::LowLevelMouseProc(const int nCode, const WPARAM wParam, const LPARAM 
 
     if (isUp && s_pressed.exchange(false, std::memory_order_relaxed))
     {
+        // 防止重入：如果正在执行任务，忽略新的触发
+        if (instance().m_task_executing.load(std::memory_order_acquire))
+        {
+            return 1;
+        }
+
+        // 关键修改：不在钩子线程中直接调用 callback，而是投递到工作线程
         if (instance().m_callback)
         {
-            instance().m_callback();
+            auto callback = instance().m_callback;
+            instance().post_task([callback]() {
+                callback();
+            });
         }
         return 1;
     }
@@ -153,12 +227,6 @@ MouseHook::LowLevelMouseProc(const int nCode, const WPARAM wParam, const LPARAM 
 
 bool MouseHook::check_exclude_exe() const
 {
-    const auto cfg = m_config.load(std::memory_order_acquire);
-    if (!cfg || cfg->exclude_exes.empty())
-    {
-        return false;
-    }
-
     POINT pt;
     if (!GetCursorPos(&pt))
     {
@@ -174,6 +242,18 @@ bool MouseHook::check_exclude_exe() const
     DWORD pid = 0;
     GetWindowThreadProcessId(hwnd, &pid);
     if (pid == 0)
+    {
+        return false;
+    }
+
+    // 排除自己的进程（避免在控制台窗口上触发）
+    if (pid == GetCurrentProcessId())
+    {
+        return true;
+    }
+
+    const auto cfg = m_config.load(std::memory_order_acquire);
+    if (!cfg || cfg->exclude_exes.empty())
     {
         return false;
     }

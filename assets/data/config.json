@@ -1,4 +1,4 @@
-﻿{
+{
   "admin": false,
   "autoStartup": false,
   "checkForUpdate": false,
@@ -9,7 +9,7 @@
   "hotkey": {
     "alt": false,
     "ctrl": false,
-    "enable": true,
+    "enabled": true,
     "left": false,
     "mid": false,
     "right": true,
