@@ -65,7 +65,7 @@ void MouseHook::refresh_config()
     {
         std::string lowStr;
         lowStr.resize(excluded.size());
-        std::ranges::transform(excluded, lowStr.begin(), ::towlower);
+        std::ranges::transform(excluded, lowStr.begin(), ::tolower);
         std::wstring ws = sw::Utils::ToWideStr(lowStr);
         exclude_list.push_back(ws);
     }
