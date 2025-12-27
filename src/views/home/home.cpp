@@ -1,9 +1,10 @@
 #include "home.h"
 #include "../../mouse_hook/mouse_hook.h"
 #include "../../utils/utils.h"
-#include "config/config.h"
+#include "config/config.hpp"
 
 #include <dwmapi.h>
+#include <filesystem>
 #include <future>
 
 Home::Home()
@@ -21,13 +22,13 @@ void Home::init_ui()
     ToolWindow = true;
     Borderless = true;
     IsLayered  = true;
-    Opacity    = config::get_or<float>("window/opacity", 0.97f);
-    Visible    = false;
+    Opacity    = config::get<float>("window/opacity", 0.97f);
+    Visible    = true;
 
     Width     = 120;
-    Height    = 60;
+    Height    = 64;
     MinWidth  = 120;
-    MaxWidth  = config::get_or<int>("window/max-width", 800);
+    MaxWidth  = config::get<int>("window/max-width", 800);
     BackColor = sw::Color{44, 44, 44};
     SetLayout<sw::FillLayout>();
 
@@ -49,6 +50,8 @@ void Home::init_ui()
     m_iconBar.HorizontalAlignment = sw::HorizontalAlignment::Left;
     m_iconBar.VerticalAlignment   = sw::VerticalAlignment::Center;
     m_iconBar.IsHitTestVisible    = false;
+    m_iconBar.Margin              = sw::Thickness{0, 4, 0, 0};
+
     m_grid.AddChild(m_iconBar, sw::GridLayoutTag{1, 0});
     AddChild(m_grid);
 }
@@ -57,6 +60,23 @@ void Home::init_icons()
 {
     m_iconBoxes.clear();
     m_iconBar.ClearChildren();
+
+    std::vector<IconItem> icons;
+
+    const auto lists = config::get<std::vector<nlohmann::json>>("list");
+    for (const auto &item : lists)
+    {
+        IconItem icon;
+        icon.command    = item.value("command", "");
+        const auto path = item.value("icon", "");
+        icon.icon_path  = sw::Utils::ToWideStr(path);
+        icons.push_back(icon);
+    }
+
+    if (!icons.empty())
+    {
+        populate_icons(icons, 20);
+    }
 }
 
 void Home::init_connect()
@@ -79,22 +99,20 @@ void Home::init_connect()
         }
         if (!txt.empty())
         {
-            Invoke([this, &txt]() {
-                m_textBox.Text = txt;
-                update_text_width();
-                Show();
+            m_textBox.Text = txt;
+            update_text_width();
+            Show();
 
-                ::SetForegroundWindow(Handle);
-                ::BringWindowToTop(Handle);
-                ::SetFocus(Handle);
+            ::SetForegroundWindow(Handle);
+            ::BringWindowToTop(Handle);
+            ::SetFocus(Handle);
 
-                POINT pt;
-                if (::GetCursorPos(&pt))
-                {
-                    Left = pt.x;
-                    Top  = pt.y + 20;
-                }
-            });
+            POINT pt;
+            if (::GetCursorPos(&pt))
+            {
+                Left = pt.x;
+                Top  = pt.y + 20;
+            }
         }
     });
 
@@ -113,7 +131,7 @@ void Home::init_connect()
         });
 }
 
-void Home::enable_window_shadow()
+void Home::enable_window_shadow() const
 {
     DWMNCRENDERINGPOLICY policy = DWMNCRP_ENABLED;
     DwmSetWindowAttribute(Handle, DWMWA_NCRENDERING_POLICY, &policy, sizeof(policy));
@@ -156,26 +174,25 @@ void Home::update_text_width()
     Width          = finalW;
 }
 
-void Home::populate_icons(const std::vector<std::wstring> &icon_paths, int square_size)
+void Home::populate_icons(const std::vector<IconItem> &icons, int square_size)
 {
     m_iconBar.ClearChildren();
     m_iconBoxes.clear();
 
-    for (const auto &path : icon_paths)
+    for (const auto &item : icons)
     {
+
         auto icon         = std::make_unique<sw::IconBox>();
         icon->StretchIcon = true;
-        icon->Load(path);
+        icon->Load(item.icon_path);
 
-        auto btn                 = std::make_unique<sw::Button>();
-        btn->Width               = square_size;
-        btn->Height              = square_size;
-        btn->HorizontalAlignment = sw::HorizontalAlignment::Left;
-        btn->VerticalAlignment   = sw::VerticalAlignment::Center;
-        btn->AddChild(*icon);
+        icon->Width     = square_size;
+        icon->Height    = square_size;
+        icon->BackColor = sw::Color{38, 38, 38};
 
-        m_iconBar.AddChild(*btn);
+        icon->Margin = sw::Thickness{0, 0, 6, 0};
 
+        m_iconBar.AddChild(*icon);
         m_iconBoxes.emplace_back(std::move(icon));
     }
 }
@@ -216,7 +233,7 @@ bool Home::OnKillFocus(HWND hNextFocus)
     });
     if (!isChildren)
     {
-        Visible = false;
+        // Visible = false;
     }
     return Window::OnKillFocus(hNextFocus);
 }

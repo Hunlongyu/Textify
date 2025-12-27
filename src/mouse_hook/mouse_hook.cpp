@@ -1,7 +1,7 @@
 #include "mouse_hook.h"
 
 #include "Utils.h"
-#include "config/config.h"
+#include "config/config.hpp"
 
 std::atomic<bool> MouseHook::s_pressed{false};
 
@@ -64,15 +64,15 @@ void MouseHook::uninstall()
 void MouseHook::refresh_config()
 {
     const auto new_cfg = std::make_shared<Config>();
-    new_cfg->enabled   = config::get_or<bool>("hotkey/enabled", true);
-    new_cfg->left      = config::get_or<bool>("hotkey/left", false);
-    new_cfg->mid       = config::get_or<bool>("hotkey/mid", false);
-    new_cfg->right     = config::get_or<bool>("hotkey/right", true);
-    new_cfg->alt       = config::get_or<bool>("hotkey/alt", true);
-    new_cfg->ctrl      = config::get_or<bool>("hotkey/ctrl", false);
-    new_cfg->shift     = config::get_or<bool>("hotkey/shift", false);
+    new_cfg->enabled   = config::get<bool>("hotkey/enabled", true);
+    new_cfg->left      = config::get<bool>("hotkey/left", false);
+    new_cfg->mid       = config::get<bool>("hotkey/mid", false);
+    new_cfg->right     = config::get<bool>("hotkey/right", true);
+    new_cfg->alt       = config::get<bool>("hotkey/alt", true);
+    new_cfg->ctrl      = config::get<bool>("hotkey/ctrl", false);
+    new_cfg->shift     = config::get<bool>("hotkey/shift", false);
 
-    const auto list = config::get_or<std::vector<std::string>>("exclude", {"Notepad3.exe"});
+    const auto list = config::get<std::vector<std::string>>("exclude", {"Notepad3.exe"});
     std::vector<std::wstring> exclude_list;
     for (auto &excluded : list)
     {

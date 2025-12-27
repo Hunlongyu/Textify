@@ -15,7 +15,7 @@ include(FetchContent)
 FetchContent_Declare(
     sw
     GIT_REPOSITORY https://github.com/Mzying2001/sw
-    GIT_TAG        0.0.7
+    GIT_TAG        0.1.0
     SOURCE_SUBDIR  sw
     GIT_SHALLOW    TRUE
 )
@@ -28,7 +28,6 @@ FetchContent_Declare(
     GIT_TAG         main
     GIT_SHALLOW     TRUE
 )
-set(BUILD_CONFIG_EXAMPLES OFF CACHE BOOL "")
 FetchContent_MakeAvailable(config)
 
 set(Files 
@@ -53,8 +52,12 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     sw
-    config
+    config::config
     ole32
     oleacc
     dwmapi
 )
+
+# Copy assets/data content to the build directory at configure time
+file(GLOB children "${CMAKE_CURRENT_SOURCE_DIR}/assets/data/*")
+file(COPY ${children} DESTINATION "${CMAKE_BINARY_DIR}")

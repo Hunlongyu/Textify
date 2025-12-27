@@ -4,7 +4,8 @@
   "checkForUpdate": false,
   "exclude": [
     "WeChat.exe",
-    "WXWork.exe"
+    "WXWork.exe",
+    "Weixin.exe"
   ],
   "hotkey": {
     "alt": false,
@@ -17,28 +18,16 @@
   },
   "list": [
     {
-      "hide": true,
-      "icon": "data/icons/close.ico",
-      "tips": "隐藏界面",
-      "type": "hide"
-    },
-    {
-      "hide": true,
-      "icon": "data/icons/copy.ico",
-      "tips": "复制到剪贴板",
-      "type": "copy"
-    },
-    {
       "command": "https://www.baidu.com/s?wd=%s",
       "hide": true,
-      "icon": "data/icons/baidu.ico",
+      "icon": "./icons/baidu.ico",
       "tips": "百度搜索",
       "type": "web"
     },
     {
       "command": "https://fanyi.baidu.com/#auto/auto/%s",
       "hide": true,
-      "icon": "data/icons/bdfy.ico",
+      "icon": "./icons/bdfy.ico",
       "tips": "百度翻译",
       "type": "web"
     }

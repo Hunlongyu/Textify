@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SimpleWindow.h>
+#include "SimpleWindow.h"
 
 class Home : public sw::Window
 {
@@ -18,15 +18,24 @@ class Home : public sw::Window
     sw::TextBox                               m_textBox;
     std::vector<std::unique_ptr<sw::IconBox>> m_iconBoxes;
 
+    struct IconItem
+    {
+        std::wstring icon_path;
+        std::string  command;
+        std::string  type;
+        std::string  tips;
+        bool         hide = false;
+    };
+
     void init_ui();
 
     void init_icons();
 
     void init_connect();
 
-    void enable_window_shadow();
+    void enable_window_shadow() const;
 
     void update_text_width();
 
-    void populate_icons(const std::vector<std::wstring> &icon_paths, int square_size = 48);
+    void populate_icons(const std::vector<IconItem> &items, int square_size = 20);
 };
